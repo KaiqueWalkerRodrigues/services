@@ -1,0 +1,37 @@
+Aqui está o conteúdo organizado para o seu arquivo de documentação no VS Code:
+
+Documentação: Sistema de Agendamento Inteligente (Brainstorming)
+Visão Geral
+Sistema de agendamento flexível para serviços (cabeleireiro, tatuador, maquiagem, unhas, etc.) baseado em pesos dinâmicos, visando otimização da agenda e preenchimento de "gaps" (espaços ociosos) entre horários.
+
+Ideia 1: Sistema de Pesos e Otimização de Intervalos (Sub-horários)
+O sistema utiliza um cálculo de "peso" do serviço para determinar a ocupação real e identificar janelas de tempo ocultas.
+
+Parâmetros:
+
+peso_servico: Porcentagem ou valor relativo ao tempo total disponível.
+tempo_intervalo: Tempo fixo de ocupação total de um slot (ex: 60 minutos).
+margem_seguranca: Buffer de 5 minutos antes e 5 minutos depois (total de 10 min extra).
+
+Lógica:
+
+Se um serviço de peso 20% (12 min) é agendado às 08h, o sistema entende a ocupação.
+O sistema analisa se a soma dos pesos de novos serviços solicitados, acrescida da margem_seguranca, cabe no intervalo disponível.
+Exemplo: Se a soma dos pesos for 60% (36 min) + 10 min (margem) = 46 min, e o slot tiver 60 min, o sistema permite o agendamento em um sub-horário (ex: 08h20), arredondando para facilitar a gestão.
+
+Ideia 2: Normalização de Pesos (Gestão de Frações)
+Focado em evitar fragmentação excessiva da agenda e simplificar o cálculo para serviços menores.
+
+Regra de Arredondamento:
+
+Na soma de pesos (ex: peso 1 + peso 0,5), o sistema desconsidera a quebra decimal para fins de alocação bruta, tratando como um bloco de 1 unidade de tempo.
+Regra de Exceção (Serviço Unitário):
+Caso um serviço com peso fracionado (ex: 0,5) seja agendado isoladamente, ele assume valor 1 (ou o peso mínimo de um slot) para garantir que não ocupe uma janela impossível de ser gerida.
+Nota: Esta regra integra-se à Ideia 1 para evitar que serviços muito pequenos "quebrem" a lógica de otimização de sub-horários.
+
+Regras de Negócio e Considerações Técnicas
+
+Buffer Dinâmico: O sistema sempre deve considerar os 5 minutos de tolerância antes e depois, independentemente do peso, para garantir a viabilidade operacional (troca de equipamentos, limpeza, intervalo do profissional).
+Arredondamento: Horários sugeridos para o cliente devem ser sempre múltiplos convenientes (ex: 08h00, 08h15, 08h20, 08h30) para manter a organização visual da agenda.
+Flexibilidade: O sistema deve ser capaz de recalcular os pesos conforme a adição de novos serviços, movendo os "sub-horários" dentro do bloco de tempo disponível.
+
