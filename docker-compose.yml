@@ -26,6 +26,23 @@ services:
     networks:
       - services-net
 
+  backend:
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+    container_name: c-backend
+    ports:
+      - "81:81"
+    expose:
+      - "81"
+    volumes:
+      - ./backend:/var/www/html
+      - /var/www/html/vendor
+    networks:
+      - services-net
+    depends_on:
+      - mysql
+
   mysql:
     image: mysql:8.0
     container_name: c-mysql
