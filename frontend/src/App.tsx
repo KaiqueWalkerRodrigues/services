@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import Login from "./components/Login";
+import Home from "./pages/Home";
 import LoginCliente from "./pages/login/clientes";
 import LoginColaborador from "./pages/login/colaboradores";
 
@@ -12,6 +13,7 @@ export default function App() {
           path="/login-colaborador"
           element={<Login tipo="colaborador" />}
         /> */}
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginCliente />} />
         <Route path="/loginEmpresa" element={<LoginColaborador />} />
       </Routes>
