@@ -26,7 +26,7 @@ foreach (USERS as $user) {
         // Sucesso: Configura a sessão
         $_SESSION['logado'] = true;
         $_SESSION['email'] = $user['email'];
-        $_SESSION['id_setores'] = $user['id_setores'];
+        // $_SESSION['id_setores'] = $user['id_setores'];
 
         $loginSucesso = true;
         break;
