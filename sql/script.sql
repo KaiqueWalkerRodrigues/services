@@ -29,15 +29,15 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `barb`.`cargos`
+-- Table `barb`.`grupos`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `barb`.`cargos` (
-  `id_cargo` INT NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `barb`.`grupos` (
+  `id_grupo` INT NOT NULL AUTO_INCREMENT,
   `nome` VARCHAR(150) NOT NULL,
   `created_at` TIMESTAMP NOT NULL,
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL,
-  PRIMARY KEY (`id_cargo`))
+  PRIMARY KEY (`id_grupo`))
 ENGINE = InnoDB;
 
 
@@ -138,19 +138,19 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `barb`.`colaboradores` (
   `id_colaborador` INT NOT NULL AUTO_INCREMENT,
   `id_empresa` INT NOT NULL,
-  `id_cargo` INT NOT NULL,
+  `id_grupo` INT NOT NULL,
   `login` VARCHAR(100) NOT NULL,
   `senha` VARCHAR(200) NOT NULL,
   `created_at` TIMESTAMP NOT NULL,
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL,
   PRIMARY KEY (`id_colaborador`),
-  INDEX `fk_colaboradores_cargos_idx` (`id_cargo` ASC),
+  INDEX `fk_colaboradores_grupos_idx` (`id_grupo` ASC),
   INDEX `fk_colaboradores_empresas_idx` (`id_empresa` ASC),
   UNIQUE INDEX `login_UNIQUE` (`login` ASC),
-  CONSTRAINT `fk_colaboradores_cargos`
-    FOREIGN KEY (`id_cargo`)
-    REFERENCES `barb`.`cargos` (`id_cargo`)
+  CONSTRAINT `fk_colaboradores_grupos`
+    FOREIGN KEY (`id_grupo`)
+    REFERENCES `barb`.`grupos` (`id_grupo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_colaboradores_empresas`

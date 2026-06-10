@@ -1,28 +1,82 @@
 <?php
+session_start();
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+// Definições e Constantes
+// include_once('const.php'); // Descomente caso use arquivo de constantes
+define('BASE_DIR', __DIR__ . '/pages/');
 
-// Define o cabeçalho para retorno em JSON
+// Configura o cabeçalho para respostas JSON (padrão de API)
 header('Content-Type: application/json; charset=utf-8');
 
-// Inclui a classe Empresas (a classe Conexao já é chamada dentro dela)
-require_once __DIR__ . '/class/classes.php';
+/**
+ * Verifica se o usuário possui pelo menos um dos setores necessários.
+ */
+function verificarSetor(array $setores_necessarios)
+{
+    // Garante que a sessão possui os setores em formato de array
+    if (!isset($_SESSION['id_setores']) || !is_array($_SESSION['id_setores'])) {
+        return false;
+    }
 
-try {
-    // Instancia a classe
-    $Empresa = new Empresas();
-
-    // Chama o método listar, que retorna o array de dados
-    $resultado = $Empresa->listar();
-} catch (Throwable $e) {
-    http_response_code(500);
-    $resultado = [
-        'status' => 'erro',
-        'mensagem' => 'Erro no backend: ' . $e->getMessage()
-    ];
+    foreach ($_SESSION['id_setores'] as $setor_usuario) {
+        if (in_array($setor_usuario, $setores_necessarios)) {
+            return true;
+        }
+    }
+    return false;
 }
 
-// Converte o array retornado para o formato JSON e imprime na tela
-echo json_encode($resultado);
+// 1. Captura e limpeza da URL requisitada
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$route = trim($requestUri, '/'); // Ex: 'api/login'
+
+// 2. Tabela de Rotas
+// Formato: 'caminho/na/url' => ['file' => 'arquivo.php', 'login' => bool, 'setores' => array|null]
+$rotas = [
+    'api/login' => [
+        'file' => 'login.php',
+        'login' => false,
+        'setores' => null
+    ],
+];
+
+// 3. Processamento da Rota
+if (array_key_exists($route, $rotas)) {
+    $configRota = $rotas[$route];
+    $file = $configRota['file'];
+    $requiredLogin = $configRota['login'];
+    $requiredSectors = $configRota['setores'];
+} else {
+    // Rota não registrada
+    http_response_code(404);
+    echo json_encode(["status" => "erro", "mensagem" => "Endpoint não encontrado (404)."]);
+    exit;
+}
+
+// 4. Validação de Login
+if ($requiredLogin && empty($_SESSION['logado'])) {
+    http_response_code(401);
+    echo json_encode(["status" => "erro", "mensagem" => "Não autorizado. Faça login (401)."]);
+    exit;
+}
+
+// 5. Validação de Setores (Grupos)
+if ($requiredSectors !== null) {
+    if (!verificarSetor($requiredSectors)) {
+        http_response_code(403);
+        echo json_encode(["status" => "erro", "mensagem" => "Acesso negado para o seu setor (403)."]);
+        exit;
+    }
+}
+
+// 6. Inclusão do Arquivo Responsável
+$filePath = BASE_DIR . $file;
+
+if (file_exists($filePath)) {
+    // O arquivo incluído (ex: pages/login.php) deve fazer os echos finais (ex: json_encode dos dados)
+    include $filePath;
+} else {
+    http_response_code(500);
+    echo json_encode(["status" => "erro", "mensagem" => "Arquivo interno ausente: {$file}"]);
+    exit;
+}
