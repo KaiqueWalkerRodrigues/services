@@ -38,6 +38,11 @@ $rotas = [
         'login' => false,
         'setores' => null
     ],
+    'api/loginEmpresa' => [
+        'file' => 'loginEmpresa.php',
+        'login' => false,
+        'setores' => null
+    ],
 ];
 
 // 3. Processamento da Rota

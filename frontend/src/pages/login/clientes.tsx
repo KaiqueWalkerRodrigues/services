@@ -1,5 +1,9 @@
 "use client";
 
+import { useState, type FormEvent } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { realizarLoginCliente } from "../../services/auth";
+
 // ─── Theme tokens ────────────────────────────────────────────────────────────
 // To swap themes, change THEME below to "dark" or "light".
 // Add new themes by extending the `themes` object.
@@ -113,28 +117,28 @@ const themes: Record<
     footerLinkBorder: "rgba(0,0,0,0.2)",
   },
   manicure: {
-    bg: "#fdf8f9", // Fundo rosa bem clarinho (blush)
+    bg: "#fdf8f9",
     bgPattern:
       "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(219, 112, 147, 0.08) 0%, transparent 70%)",
     card: "rgba(255,255,255,0.95)",
-    cardBorder: "rgba(219, 112, 147, 0.15)", // Borda sutil rosada
+    cardBorder: "rgba(219, 112, 147, 0.15)",
     cardShadow:
       "0 0 0 1px rgba(219, 112, 147, 0.05), 0 30px 60px rgba(219, 112, 147, 0.08)",
     topAccent:
       "linear-gradient(90deg, transparent, rgba(212, 93, 127, 0.4), transparent)",
     eyebrow: "rgba(176, 58, 98, 0.6)",
-    title: "#4a152b", // Ameixa/Bordô escuro para contraste chique
+    title: "#4a152b",
     label: "rgba(74, 21, 43, 0.65)",
     inputBg: "rgba(253, 248, 249, 0.7)",
     inputBorder: "rgba(219, 112, 147, 0.25)",
     inputColor: "#4a152b",
     inputPlaceholder: "rgba(176, 58, 98, 0.35)",
-    inputFocusBorder: "#d45d7f", // Rosa vibrante/médio
+    inputFocusBorder: "#d45d7f",
     inputFocusBg: "#ffffff",
     inputFocusShadow: "0 0 0 3px rgba(212, 93, 127, 0.15)",
     forgotColor: "rgba(212, 93, 127, 0.8)",
     forgotHover: "#b03a62",
-    btnBg: "#d45d7f", // Botão principal em tom de esmalte rosa envelhecido/rosé
+    btnBg: "#d45d7f",
     btnColor: "#ffffff",
     btnShadow: "0 4px 15px rgba(212, 93, 127, 0.3)",
     btnHoverShadow: "0 8px 25px rgba(212, 93, 127, 0.45)",
@@ -156,11 +160,32 @@ const THEME: ThemeName = "dark"; // ← mude aqui para trocar o tema
 export default function LoginCliente() {
   const t = themes[THEME];
 
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    const toastId = toast.loading('Verificando credenciais...');
+
+    try {
+      const dados = await realizarLoginCliente(email, senha);
+      toast.success(dados.mensagem || 'Login efetuado com sucesso!', { id: toastId });
+      
+      // setTimeout(() => {
+      //   window.location.href = '/dashboard'; 
+      // }, 1500);
+    } catch (error: any) {
+      toast.error(error.message, { id: toastId });
+    }
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
       style={{ backgroundColor: t.bg }}
     >
+      <Toaster position="top-right" />
+
       {/* Subtle radial glow */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -224,8 +249,7 @@ export default function LoginCliente() {
         </div>
 
         <form
-          action="http://localhost:81/login"
-          method="POST"
+          onSubmit={handleLogin}
           className="space-y-4"
         >
           {/* Email */}
@@ -241,6 +265,8 @@ export default function LoginCliente() {
               name="email"
               required
               placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-150"
               style={{
                 background: t.inputBg,
@@ -288,6 +314,8 @@ export default function LoginCliente() {
               name="password"
               required
               placeholder="••••••••"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-150"
               style={{
                 background: t.inputBg,

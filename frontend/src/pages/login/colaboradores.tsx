@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { realizarLoginEmpresa } from "../../services/auth";
 
 // ─── Theme tokens ────────────────────────────────────────────────────────────
 type ThemeName = "dark" | "light";
@@ -112,18 +114,45 @@ const THEME: ThemeName = "dark"; // ← mude aqui para trocar o tema
 
 export default function LoginColaborador() {
   const t = themes[THEME];
+  
+  // Estados para controlar a exibição condicional e os dados digitados
   const [mostrarCodigo, setMostrarCodigo] = useState(true);
+  const [codigo, setCodigo] = useState("");
+  const [usuario, setUsuario] = useState("");
+  const [senha, setSenha] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.has("cod")) setMostrarCodigo(false);
   }, []);
 
+  // Função que dispara o POST para o Backend
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    const toastId = toast.loading('Verificando acesso interno...');
+
+    try {
+      // Passa o usuário (ex: nome.sobrenome) no primeiro parâmetro esperado pela API
+      const dados = await realizarLoginEmpresa(codigo, usuario, senha);
+      
+      toast.success(dados.mensagem || 'Acesso liberado!', { id: toastId });
+      
+      // setTimeout(() => {
+      //   window.location.href = '/dashboard-empresa'; 
+      // }, 1500);
+
+    } catch (error: any) {
+      toast.error(error.message, { id: toastId });
+    }
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
       style={{ backgroundColor: t.bg }}
     >
+      <Toaster position="top-right" />
+
       {/* Bottom glow — diferente do cliente (que tem o glow no topo) */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -210,8 +239,7 @@ export default function LoginColaborador() {
         </div>
 
         <form
-          action="http://localhost:81/login"
-          method="POST"
+          onSubmit={handleLogin}
           className="space-y-4"
         >
           {/* Código — condicional mantido */}
@@ -228,6 +256,8 @@ export default function LoginColaborador() {
                 name="codigo"
                 required
                 placeholder="000-000"
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-150 font-mono"
                 style={{
                   background: t.inputBg,
@@ -262,6 +292,8 @@ export default function LoginColaborador() {
               name="usuario"
               required
               placeholder="nome.sobrenome"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-150"
               style={{
                 background: t.inputBg,
@@ -313,6 +345,8 @@ export default function LoginColaborador() {
               name="password"
               required
               placeholder="••••••••"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-150"
               style={{
                 background: t.inputBg,

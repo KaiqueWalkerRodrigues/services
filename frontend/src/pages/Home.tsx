@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     const buscarDados = async () => {
       try {
-        const resposta = await fetch("http://192.168.15.174:81/");
+        const resposta = await fetch("http://192.168.15.6:81/");
         const json = await resposta.json();
 
         if (json.status === "sucesso") {
