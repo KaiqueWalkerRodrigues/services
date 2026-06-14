@@ -3,7 +3,7 @@
 // Inclui o arquivo da sua classe de conexão
 require_once __DIR__ . '/Conexao.php';
 
-class Empresas
+class Empresa
 {
     private $pdo;
 
