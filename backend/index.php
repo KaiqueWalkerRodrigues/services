@@ -3,7 +3,7 @@ session_start();
 
 // Definições e Constantes
 // include_once('const.php'); // Descomente caso use arquivo de constantes
-define('BASE_DIR', __DIR__ . '/pages/');
+define('BASE_DIR', __DIR__ . '/api/');
 
 // Configura o cabeçalho para respostas JSON (padrão de API)
 header('Content-Type: application/json; charset=utf-8');
@@ -34,11 +34,6 @@ $route = trim($requestUri, '/'); // Ex: 'api/login'
 // Formato: 'caminho/na/url' => ['file' => 'arquivo.php', 'login' => bool, 'setores' => array|null]
 $rotas = [
     //auth
-    'api/auth/login' => [
-        'file' => 'auth/login.php',
-        'login' => false,
-        'setores' => null
-    ],
     'api/auth/logout' => [
         'file' => 'auth/logout.php',
         'login' => false,
@@ -51,6 +46,11 @@ $rotas = [
     ],
     'api/auth/loginEmpresa' => [
         'file' => 'auth/loginEmpresa.php',
+        'login' => false,
+        'setores' => null
+    ],
+    'api/auth/logout' => [
+        'file' => 'auth/logout.php',
         'login' => false,
         'setores' => null
     ],
@@ -102,7 +102,7 @@ if ($requiredSectors !== null) {
 $filePath = BASE_DIR . $file;
 
 if (file_exists($filePath)) {
-    // O arquivo incluído (ex: pages/login.php) deve fazer os echos finais (ex: json_encode dos dados)
+    // O arquivo incluído (ex: api/login.php) deve fazer os echos finais (ex: json_encode dos dados)
     include $filePath;
 } else {
     http_response_code(500);

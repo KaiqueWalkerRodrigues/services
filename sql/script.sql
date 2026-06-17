@@ -30,9 +30,10 @@ CREATE TABLE IF NOT EXISTS `barb`.`clientes` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_cliente`),
-  UNIQUE INDEX `email_UNIQUE` (`email` ASC)  ,
-  UNIQUE INDEX `celular_UNIQUE` (`celular` ASC)  )
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC) ,
+  UNIQUE INDEX `celular_UNIQUE` (`celular` ASC) )
 ENGINE = InnoDB
+AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -49,6 +50,7 @@ CREATE TABLE IF NOT EXISTS `barb`.`empresas` (
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_empresa`))
 ENGINE = InnoDB
+AUTO_INCREMENT = 121
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -64,6 +66,7 @@ CREATE TABLE IF NOT EXISTS `barb`.`grupos` (
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_grupo`))
 ENGINE = InnoDB
+AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -75,15 +78,16 @@ CREATE TABLE IF NOT EXISTS `barb`.`colaboradores` (
   `id_colaborador` INT NOT NULL AUTO_INCREMENT,
   `id_empresa` INT NOT NULL,
   `id_grupo` INT NOT NULL,
+  `nome` VARCHAR(150) NOT NULL,
   `login` VARCHAR(100) NOT NULL,
   `senha` VARCHAR(200) NOT NULL,
   `created_at` TIMESTAMP NOT NULL,
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_colaborador`),
-  UNIQUE INDEX `login_UNIQUE` (`login` ASC)  ,
-  INDEX `fk_colaboradores_grupos_idx` (`id_grupo` ASC)  ,
-  INDEX `fk_colaboradores_empresas_idx` (`id_empresa` ASC)  ,
+  UNIQUE INDEX `login_UNIQUE` (`login` ASC) ,
+  INDEX `fk_colaboradores_grupos_idx` (`id_grupo` ASC) ,
+  INDEX `fk_colaboradores_empresas_idx` (`id_empresa` ASC) ,
   CONSTRAINT `fk_colaboradores_empresas`
     FOREIGN KEY (`id_empresa`)
     REFERENCES `barb`.`empresas` (`id_empresa`),
@@ -91,6 +95,7 @@ CREATE TABLE IF NOT EXISTS `barb`.`colaboradores` (
     FOREIGN KEY (`id_grupo`)
     REFERENCES `barb`.`grupos` (`id_grupo`))
 ENGINE = InnoDB
+AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -108,9 +113,9 @@ CREATE TABLE IF NOT EXISTS `barb`.`acessos_tokens` (
   `expires_at` DATETIME NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_token`),
-  UNIQUE INDEX `refresh_token_UNIQUE` (`refresh_token` ASC)  ,
-  INDEX `fk_tokens_colaboradores_idx` (`id_colaborador` ASC)  ,
-  INDEX `fk_tokens_clientes_idx` (`id_cliente` ASC)  ,
+  UNIQUE INDEX `refresh_token_UNIQUE` (`refresh_token` ASC) ,
+  INDEX `fk_tokens_colaboradores_idx` (`id_colaborador` ASC) ,
+  INDEX `fk_tokens_clientes_idx` (`id_cliente` ASC) ,
   CONSTRAINT `fk_tokens_clientes`
     FOREIGN KEY (`id_cliente`)
     REFERENCES `barb`.`clientes` (`id_cliente`)
@@ -139,7 +144,7 @@ CREATE TABLE IF NOT EXISTS `barb`.`filiais` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_filial`),
-  INDEX `fk_filiais_empresas_idx` (`id_empresa` ASC)  ,
+  INDEX `fk_filiais_empresas_idx` (`id_empresa` ASC) ,
   CONSTRAINT `fk_filiais_empresas`
     FOREIGN KEY (`id_empresa`)
     REFERENCES `barb`.`empresas` (`id_empresa`))
@@ -164,9 +169,9 @@ CREATE TABLE IF NOT EXISTS `barb`.`agendamentos` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_agendamento`),
-  INDEX `fk_agendamentos_clientes_idx` (`id_cliente` ASC)  ,
-  INDEX `fk_agendamentos_colaboradores_idx` (`id_colaborador` ASC)  ,
-  INDEX `fk_agendamentos_filiais_idx` (`id_filial` ASC)  ,
+  INDEX `fk_agendamentos_clientes_idx` (`id_cliente` ASC) ,
+  INDEX `fk_agendamentos_colaboradores_idx` (`id_colaborador` ASC) ,
+  INDEX `fk_agendamentos_filiais_idx` (`id_filial` ASC) ,
   CONSTRAINT `fk_agendamentos_clientes`
     FOREIGN KEY (`id_cliente`)
     REFERENCES `barb`.`clientes` (`id_cliente`),
@@ -194,7 +199,7 @@ CREATE TABLE IF NOT EXISTS `barb`.`servicos` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_servico`),
-  INDEX `fk_servicos_filial_idx` (`id_filial` ASC)  ,
+  INDEX `fk_servicos_filial_idx` (`id_filial` ASC) ,
   CONSTRAINT `fk_servicos_filial`
     FOREIGN KEY (`id_filial`)
     REFERENCES `barb`.`filiais` (`id_filial`))
@@ -215,8 +220,8 @@ CREATE TABLE IF NOT EXISTS `barb`.`agendamentos_servicos` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_agendamento_servico`),
-  INDEX `fk_agendamentos_servicos_servicos_idx` (`id_servico` ASC)  ,
-  INDEX `fk_agendamentos_agendamentos_idx` (`id_agendamento` ASC)  ,
+  INDEX `fk_agendamentos_servicos_servicos_idx` (`id_servico` ASC) ,
+  INDEX `fk_agendamentos_agendamentos_idx` (`id_agendamento` ASC) ,
   CONSTRAINT `fk_agendamentos_agendamentos`
     FOREIGN KEY (`id_agendamento`)
     REFERENCES `barb`.`agendamentos` (`id_agendamento`),
@@ -239,8 +244,8 @@ CREATE TABLE IF NOT EXISTS `barb`.`clientes_empresas` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_cliente_empresa`),
-  INDEX `fk_clientes_empresas_empresas_idx` (`id_empresa` ASC)  ,
-  INDEX `fk_clientes_empresas_clientes_idx` (`id_cliente` ASC)  ,
+  INDEX `fk_clientes_empresas_empresas_idx` (`id_empresa` ASC) ,
+  INDEX `fk_clientes_empresas_clientes_idx` (`id_cliente` ASC) ,
   CONSTRAINT `fk_clientes_empresas_clientes`
     FOREIGN KEY (`id_cliente`)
     REFERENCES `barb`.`clientes` (`id_cliente`),
@@ -263,8 +268,8 @@ CREATE TABLE IF NOT EXISTS `barb`.`filiais_colaboradores` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_filial_colaborador`),
-  INDEX `fk_filiais_colaboradores_colaboradores_idx` (`id_colaborador` ASC)  ,
-  INDEX `fk_filiais_colaboradores_filiais_idx` (`id_filial` ASC)  ,
+  INDEX `fk_filiais_colaboradores_colaboradores_idx` (`id_colaborador` ASC) ,
+  INDEX `fk_filiais_colaboradores_filiais_idx` (`id_filial` ASC) ,
   CONSTRAINT `fk_filiais_colaboradores_colaboradores`
     FOREIGN KEY (`id_colaborador`)
     REFERENCES `barb`.`colaboradores` (`id_colaborador`),
@@ -288,7 +293,7 @@ CREATE TABLE IF NOT EXISTS `barb`.`parametros_empresas` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_parametro_empresa`),
-  INDEX `fk_parametros_empresas_empresas_idx` (`id_empresa` ASC)  ,
+  INDEX `fk_parametros_empresas_empresas_idx` (`id_empresa` ASC) ,
   CONSTRAINT `fk_parametros_empresas_empresas`
     FOREIGN KEY (`id_empresa`)
     REFERENCES `barb`.`empresas` (`id_empresa`))
@@ -309,7 +314,7 @@ CREATE TABLE IF NOT EXISTS `barb`.`parametros_filiais_colaboradores` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_parametro_filial_colaborador`),
-  INDEX `fk_parametros_filiais_colaboradores_filiais_colaboradores_idx` (`id_filial_colaborador` ASC)  ,
+  INDEX `fk_parametros_filiais_colaboradores_filiais_colaboradores_idx` (`id_filial_colaborador` ASC) ,
   CONSTRAINT `fk_parametros_filiais_colaboradores_filiais_colaboradores`
     FOREIGN KEY (`id_filial_colaborador`)
     REFERENCES `barb`.`filiais_colaboradores` (`id_filial_colaborador`))
@@ -330,7 +335,7 @@ CREATE TABLE IF NOT EXISTS `barb`.`parametros_filial` (
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`id_parametro_filial`),
-  INDEX `fk_parametros_filiais_filiais_idx` (`id_filial` ASC)  ,
+  INDEX `fk_parametros_filiais_filiais_idx` (`id_filial` ASC) ,
   CONSTRAINT `fk_parametros_filiais_filiais`
     FOREIGN KEY (`id_filial`)
     REFERENCES `barb`.`filiais` (`id_filial`))

@@ -1,45 +1,60 @@
 <?php
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: *"); // Ajuste para o domínio do seu front em produção
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST");
+
+// Lida com pre-flight requests do CORS
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 require_once 'class/classes.php';
 
 $dados = json_decode(file_get_contents("php://input"));
 
 if (!empty($dados->login) && !empty($dados->senha)) {
-    
-    // Captura a origem (ex: React_Web ou React_Native) e o IP do usuário
-    $origem = $dados->origem ?? 'Desconhecida';
+
+    $origem = $dados->origem ?? 'web';
     $ip_address = $_SERVER['REMOTE_ADDR'];
 
     $colaborador = new Colaborador();
-    
-    // Chama o novo método que faz validação e insere no banco
     $resultadoLogin = $colaborador->login($dados->login, $dados->senha, $origem, $ip_address);
-    
+
     if ($resultadoLogin['status'] === 'sucesso') {
         $usuario = $resultadoLogin['dados_usuario'];
-        
-        // --- GERAÇÃO DO JWT (Access Token) ---
+
+        // --- GERAÇÃO DO JWT ---
         $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
         $payload = base64_encode(json_encode([
             'sub' => $usuario['id_colaborador'],
             'tipo' => 'colaborador',
             'id_empresa' => $usuario['id_empresa'],
-            'id_cargo' => $usuario['id_cargo'],
-            'exp' => time() + (15 * 60) // JWT Expira em 15 minutos
+            'exp' => time() + (15 * 60)
         ]));
-        
-        $secret = getenv('JWT_SECRET') ?: 'sua_chave_secreta_aqui';
+
+        $secret = getenv('JWT_SECRET') ?: 'abc123';
         $signature = base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true));
         $token_jwt = "$header.$payload.$signature";
-        
-        // Retorna o JWT e o Refresh Token (já salvo no banco)
+
+        // --- TRATATIVA PARA WEB (COOKIE) ---
+        // Se for web, salvamos o JWT em um cookie seguro
+        if ($origem === 'web') {
+            setcookie("access_token", $token_jwt, [
+                'expires' => time() + (15 * 60),
+                'path' => '/',
+                'secure' => false,     // Necessário HTTPS
+                'httponly' => true,   // Bloqueia acesso via JS (protege contra XSS)
+                'samesite' => 'Strict'
+            ]);
+        }
+
         http_response_code(200);
         echo json_encode([
             "sucesso" => true,
-            "access_token" => $token_jwt,
+            // Mobile: lerá daqui. Web: lerá do Cookie.
+            "access_token" => ($origem === 'mobile') ? $token_jwt : null,
             "refresh_token" => $resultadoLogin['refresh_token'],
             "usuario" => $usuario
         ]);
@@ -49,5 +64,5 @@ if (!empty($dados->login) && !empty($dados->senha)) {
     }
 } else {
     http_response_code(400);
-    echo json_encode(["sucesso" => false, "mensagem" => "Informe login e senha."]);
+    echo json_encode(["sucesso" => false, "mensagem" => "Dados incompletos."]);
 }
