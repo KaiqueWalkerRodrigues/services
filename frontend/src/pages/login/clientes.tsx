@@ -244,7 +244,7 @@ export default function LoginCliente() {
             Acessar
           </h1>
           <p className="text-sm mt-1" style={{ color: t.eyebrow }}>
-            Efetue login na sua conta para continuar
+            Efetue login para continuar
           </p>
         </div>
 
@@ -444,7 +444,7 @@ export default function LoginCliente() {
         >
           Não tem conta?{" "}
           <a
-            href="#"
+            href="/registro"
             className="transition-colors duration-150"
             style={{
               color: t.footerLink,
