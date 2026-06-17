@@ -204,17 +204,17 @@ export default function LoginCliente() {
 
       {/* System label top */}
       <div
-        className="relative z-10 mb-8 text-center"
+        className="relative z-10 mb-8 text-center w-full flex flex-col items-center"
         style={{ animation: "fadeDown 0.6s cubic-bezier(.22,1,.36,1) both" }}
       >
         <p
-          className="text-xs tracking-[0.35em] uppercase font-medium"
+          className="text-xs tracking-[0.35em] uppercase font-medium pl-[0.35em]"
           style={{ color: t.eyebrow }}
         >
           Sistema de Serviço
         </p>
         <div
-          className="mt-2 mx-auto h-px w-16"
+          className="mt-2 h-px w-16"
           style={{ background: t.topAccent }}
         />
       </div>
@@ -236,7 +236,7 @@ export default function LoginCliente() {
         />
 
         {/* Header */}
-        <div className="mb-7" style={{ animation: "fadeUp 0.6s 0.12s both" }}>
+        <div className="mb-7 text-center flex flex-col items-center" style={{ animation: "fadeUp 0.6s 0.12s both" }}>
           <h1
             className="text-3xl font-semibold tracking-tight"
             style={{ color: t.title, letterSpacing: "-0.02em" }}

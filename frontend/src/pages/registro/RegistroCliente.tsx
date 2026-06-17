@@ -46,6 +46,30 @@ export default function RegistroCliente() {
   const voltarPasso = () => setPassoAtual((prev) => prev - 1);
   const voltarParaLogin = () => { window.location.href = '/login'; };
 
+  const handleFinalizarCadastro = async () => {
+    const payloadJson = JSON.stringify(dadosFormulario);
+    
+    console.log("JSON pronto para envio:", payloadJson);
+    
+    try {
+      const response = await fetch("", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payloadJson
+      });
+
+      if (response.ok) {
+        alert("Usuário cadastrado com sucesso!");
+        window.location.href = '/login';
+      } else {
+        alert("Erro ao processar o cadastro no servidor.");
+      }
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+    }
+    window.location.href = '/login';
+    };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#0a0a0a" }}>
       <div className="w-full max-w-[420px] p-8 rounded-[24px] bg-[#141414] border border-[#222] shadow-2xl">
@@ -56,7 +80,7 @@ export default function RegistroCliente() {
           <RegisterStep2 dados={dadosFormulario} atualizarDados={atualizarDados} onNext={avancarPasso} onBack={voltarPasso} />
         )}
         {passoAtual === 3 && (
-          <RegisterStep3 dados={dadosFormulario} onNext={() => {alert("Usuário cadastrado!");window.location.href = '/login';}}  onBack={voltarPasso} />
+          <RegisterStep3 dados={dadosFormulario} onNext={handleFinalizarCadastro} onBack={voltarPasso} />
         )}
       </div>
     </div>
