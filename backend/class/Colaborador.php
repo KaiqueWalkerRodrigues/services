@@ -225,4 +225,45 @@ class Colaborador
 
         return $stmt->rowCount() > 0;
     }
+
+    public function renovarSessao($idColaborador, $oldRefreshToken, $origem, $ip_address)
+    {
+        try {
+            // 1. Verifica se o token existe e ainda é válido
+            $sql = "SELECT id_token FROM acessos_tokens 
+                    WHERE id_colaborador = :id 
+                    AND refresh_token = :token 
+                    AND expires_at > NOW()";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([':id' => $idColaborador, ':token' => $oldRefreshToken]);
+
+            if (!$stmt->fetch()) {
+                return ['status' => 'erro', 'mensagem' => 'Token inválido ou expirado.'];
+            }
+
+            // 2. Rotaciona: Deleta o velho e gera um novo
+            $this->logout($idColaborador, $oldRefreshToken);
+
+            $newRefreshToken = bin2hex(random_bytes(32));
+
+            $sqlInsert = "INSERT INTO acessos_tokens (id_colaborador, refresh_token, origem, ip_address, expires_at, created_at) 
+                          VALUES (:id, :token, :origem, :ip, DATE_ADD(NOW(), INTERVAL 30 DAY), NOW())";
+
+            $stmtInsert = $this->pdo->prepare($sqlInsert);
+            $stmtInsert->execute([
+                ':id' => $idColaborador,
+                ':token' => $newRefreshToken,
+                ':origem' => $origem,
+                ':ip' => $ip_address
+            ]);
+
+            return [
+                'status' => 'sucesso',
+                'refresh_token' => $newRefreshToken
+            ];
+        } catch (PDOException $e) {
+            return ['status' => 'erro', 'mensagem' => 'Erro interno: ' . $e->getMessage()];
+        }
+    }
 }

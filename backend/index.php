@@ -34,18 +34,13 @@ $route = trim($requestUri, '/'); // Ex: 'api/login'
 // Formato: 'caminho/na/url' => ['file' => 'arquivo.php', 'login' => bool, 'setores' => array|null]
 $rotas = [
     //auth
-    'api/auth/logout' => [
-        'file' => 'auth/logout.php',
+    'api/auth/loginEmpresa' => [
+        'file' => 'auth/loginEmpresa.php',
         'login' => false,
         'setores' => null
     ],
     'api/auth/refresh' => [
         'file' => 'auth/refresh.php',
-        'login' => false,
-        'setores' => null
-    ],
-    'api/auth/loginEmpresa' => [
-        'file' => 'auth/loginEmpresa.php',
         'login' => false,
         'setores' => null
     ],

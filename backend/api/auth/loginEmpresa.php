@@ -41,11 +41,21 @@ if (!empty($dados->login) && !empty($dados->senha)) {
         // --- TRATATIVA PARA WEB (COOKIE) ---
         // Se for web, salvamos o JWT em um cookie seguro
         if ($origem === 'web') {
+            // Cookie para o Access Token (15 minutos)
             setcookie("access_token", $token_jwt, [
                 'expires' => time() + (15 * 60),
                 'path' => '/',
-                'secure' => false,     // Necessário HTTPS
-                'httponly' => true,   // Bloqueia acesso via JS (protege contra XSS)
+                'secure' => false, // Mude para true se estiver usando HTTPS
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ]);
+
+            // ADICIONE ESTA PARTE PARA O REFRESH TOKEN (30 dias)
+            setcookie("refresh_token", $resultadoLogin['refresh_token'], [
+                'expires' => time() + (30 * 24 * 60 * 60), // 30 dias
+                'path' => '/',
+                'secure' => false, // Mude para true se estiver usando HTTPS
+                'httponly' => true,
                 'samesite' => 'Strict'
             ]);
         }
