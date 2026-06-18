@@ -71,8 +71,23 @@ export default function RegistroCliente() {
     };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#0a0a0a" }}>
-      <div className="w-full max-w-[420px] p-8 rounded-[24px] bg-[#141414] border border-[#222] shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
+      
+      {/* Opcional: Adicionando a mesma textura de fundo do Login para consistência */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)`,
+          backgroundSize: "28px 28px",
+          opacity: 0.5,
+        }}
+      />
+
+      {/* Aplicação da animação cardIn no container principal */}
+      <div 
+        className="relative z-10 w-full max-w-[420px] p-8 rounded-[24px] bg-[#141414] border border-[#222] shadow-2xl"
+        style={{ animation: "cardIn 0.6s 0.05s cubic-bezier(.22,1,.36,1) both" }}
+      >
         {passoAtual === 1 && (
           <RegisterStep1 dados={dadosFormulario} atualizarDados={atualizarDados} onNext={avancarPasso} onBack={voltarParaLogin} />
         )}
@@ -83,6 +98,18 @@ export default function RegistroCliente() {
           <RegisterStep3 dados={dadosFormulario} onNext={handleFinalizarCadastro} onBack={voltarPasso} />
         )}
       </div>
+
+      {/* Estilos de Animação */}
+      <style>{`
+        @keyframes cardIn {
+          from { opacity: 0; transform: translateY(24px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(15px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -96,7 +123,7 @@ function RegisterStep1({ dados, atualizarDados, onNext, onBack }: any) {
     if (valor.length > 2) valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2");
     if (valor.length > 8) valor = valor.replace(/(\d{5})(\d)/, "$1-$2");
     
-    atualizarDados({ celular: valor }); // Salva direto no "Maestro"
+    atualizarDados({ celular: valor }); 
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -105,7 +132,11 @@ function RegisterStep1({ dados, atualizarDados, onNext, onBack }: any) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <form 
+      onSubmit={handleSubmit} 
+      className="flex flex-col w-full"
+      style={{ animation: "fadeUp 0.5s cubic-bezier(.22,1,.36,1) both" }}
+    >
       <button type="button" onClick={onBack} className="self-start flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 mb-6 text-[#9ca3af] hover:text-white transition-colors text-sm font-medium">
         <ArrowLeft size={16} /> Voltar ao login
       </button>
@@ -161,7 +192,11 @@ function RegisterStep2({ dados, atualizarDados, onNext, onBack }: any) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <form 
+      onSubmit={handleSubmit} 
+      className="flex flex-col w-full"
+      style={{ animation: "fadeUp 0.5s cubic-bezier(.22,1,.36,1) both" }}
+    >
       <button type="button" onClick={onBack} className="self-start flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 mb-6 text-[#9ca3af] hover:text-white transition-colors text-sm font-medium">
         <ArrowLeft size={16} /> Voltar
       </button>
@@ -209,7 +244,11 @@ function RegisterStep3({ dados, onNext, onBack }: any) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <form 
+      onSubmit={handleSubmit} 
+      className="flex flex-col w-full"
+      style={{ animation: "fadeUp 0.5s cubic-bezier(.22,1,.36,1) both" }}
+    >
       <button type="button" onClick={onBack} className="self-start flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 mb-6 text-[#9ca3af] hover:text-white transition-colors text-sm font-medium">
         <ArrowLeft size={16} /> Voltar
       </button>
