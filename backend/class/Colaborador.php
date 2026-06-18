@@ -158,7 +158,7 @@ class Colaborador
             $sql = "SELECT id_colaborador, id_empresa, id_grupo, login, senha 
                     FROM colaboradores 
                     WHERE login = :login AND deleted_at IS NULL LIMIT 1";
-            
+
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindParam(':login', $login);
             $stmt->execute();
@@ -166,14 +166,25 @@ class Colaborador
 
             // 2. Valida se o usuário existe e se a senha está correta
             if ($usuario && password_verify($senha, $usuario['senha'])) {
-                
+
                 // 3. Gera um Refresh Token seguro (64 caracteres)
                 $refreshToken = bin2hex(random_bytes(32));
-                
-                // 4. Insere o token na tabela acessos_tokens (Validade de 30 dias)
+
+                // 4. Limpar sessoes da mesma origem ativa
+                $sqlLimpar = "DELETE FROM acessos_tokens 
+                    WHERE id_colaborador = :id_colaborador 
+                    AND origem = :origem";
+
+                $stmtLimpar = $this->pdo->prepare($sqlLimpar);
+                $stmtLimpar->execute([
+                    ':id_colaborador' => $usuario['id_colaborador'],
+                    ':origem' => $origem
+                ]);
+
+                // 5. Insere o token na tabela acessos_tokens (Validade de 30 dias)
                 $sqlToken = "INSERT INTO acessos_tokens (id_colaborador, refresh_token, origem, ip_address, expires_at, created_at) 
                              VALUES (:id_colaborador, :refresh_token, :origem, :ip_address, DATE_ADD(NOW(), INTERVAL 30 DAY), NOW())";
-                
+
                 $stmtToken = $this->pdo->prepare($sqlToken);
                 $stmtToken->bindParam(':id_colaborador', $usuario['id_colaborador']);
                 $stmtToken->bindParam(':refresh_token', $refreshToken);
@@ -181,7 +192,7 @@ class Colaborador
                 $stmtToken->bindParam(':ip_address', $ip_address);
                 $stmtToken->execute();
 
-                // 5. Remove a senha do array antes de retornar para não expor dados sensíveis
+                // 6. Remove a senha do array antes de retornar para não expor dados sensíveis
                 unset($usuario['senha']);
 
                 return [
@@ -192,16 +203,67 @@ class Colaborador
                 ];
             } else {
                 return [
-                    'status' => 'erro', 
+                    'status' => 'erro',
                     'mensagem' => 'Login ou senha incorretos.'
                 ];
             }
         } catch (PDOException $e) {
             http_response_code(500);
             return [
-                'status' => 'erro', 
+                'status' => 'erro',
                 'mensagem' => 'Erro interno ao realizar login: ' . $e->getMessage()
             ];
+        }
+    }
+
+    public function logout($id_colaborador, $refreshToken)
+    {
+        // Deleta o refresh_token do banco de dados para que ele não possa mais ser usado
+        $sql = "DELETE FROM acessos_tokens WHERE id_colaborador = :id AND refresh_token = :token";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':id' => $id_colaborador, ':token' => $refreshToken]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    public function renovarSessao($idColaborador, $oldRefreshToken, $origem, $ip_address)
+    {
+        try {
+            // 1. Verifica se o token existe e ainda é válido
+            $sql = "SELECT id_token FROM acessos_tokens 
+                    WHERE id_colaborador = :id 
+                    AND refresh_token = :token 
+                    AND expires_at > NOW()";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([':id' => $idColaborador, ':token' => $oldRefreshToken]);
+
+            if (!$stmt->fetch()) {
+                return ['status' => 'erro', 'mensagem' => 'Token inválido ou expirado.'];
+            }
+
+            // 2. Rotaciona: Deleta o velho e gera um novo
+            $this->logout($idColaborador, $oldRefreshToken);
+
+            $newRefreshToken = bin2hex(random_bytes(32));
+
+            $sqlInsert = "INSERT INTO acessos_tokens (id_colaborador, refresh_token, origem, ip_address, expires_at, created_at) 
+                          VALUES (:id, :token, :origem, :ip, DATE_ADD(NOW(), INTERVAL 30 DAY), NOW())";
+
+            $stmtInsert = $this->pdo->prepare($sqlInsert);
+            $stmtInsert->execute([
+                ':id' => $idColaborador,
+                ':token' => $newRefreshToken,
+                ':origem' => $origem,
+                ':ip' => $ip_address
+            ]);
+
+            return [
+                'status' => 'sucesso',
+                'refresh_token' => $newRefreshToken
+            ];
+        } catch (PDOException $e) {
+            return ['status' => 'erro', 'mensagem' => 'Erro interno: ' . $e->getMessage()];
         }
     }
 }

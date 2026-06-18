@@ -2,15 +2,33 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 require_once 'class/classes.php';
 
-$colaborador = new Colaborador();
 $metodo = $_SERVER['REQUEST_METHOD'];
+
+$rotaPublica = ($metodo === 'POST');
+
+if (!$rotaPublica) {
+    $headers = getallheaders();
+    $token = $headers['Authorization'] ?? $_COOKIE['access_token'] ?? null;
+    $tokenLimpo = str_replace('Bearer ', '', $token);
+
+    $usuarioAutenticado = AuthHelper::validarToken($tokenLimpo);
+
+    if (!$usuarioAutenticado) {
+        http_response_code(401);
+        echo json_encode(["sucesso" => false, "mensagem" => "Realize login."]);
+        exit;
+    }
+}
+
+// 2. Lógica da API protegida
+$colaborador = new Colaborador();
 
 switch ($metodo) {
     case 'GET':
-        // Se passar um ID na URL: api/colaboradores.php?id=1
         if (isset($_GET['id'])) {
             echo json_encode($colaborador->mostrar($_GET['id']));
         } else {
@@ -19,6 +37,7 @@ switch ($metodo) {
         break;
 
     case 'POST':
+        // Aqui você pode permitir apenas o cadastro
         $data = json_decode(file_get_contents("php://input"));
         echo json_encode($colaborador->cadastrar($data->id_empresa, $data->id_grupo, $data->nome, $data->login, $data->senha));
         break;
