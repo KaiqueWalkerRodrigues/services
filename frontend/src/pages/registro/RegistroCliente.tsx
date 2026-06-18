@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, User, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, User, CheckCircle2, Check } from "lucide-react";
 
 const StepIndicator = ({ currentStep }: { currentStep: number }) => {
   const getCircleStyle = (step: number) => {
@@ -37,7 +37,6 @@ export default function RegistroCliente() {
     senha: ""
   });
 
-
   const atualizarDados = (novosDados: Partial<typeof dadosFormulario>) => {
     setDadosFormulario((prev) => ({ ...prev, ...novosDados }));
   };
@@ -52,6 +51,7 @@ export default function RegistroCliente() {
     console.log("JSON pronto para envio:", payloadJson);
     
     try {
+      // Exemplo de integração com API
       const response = await fetch("", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -67,13 +67,15 @@ export default function RegistroCliente() {
     } catch (error) {
       console.error("Erro na requisição:", error);
     }
+    
+    // Simulação temporária (remover quando conectar com a API)
+    alert("Cadastro concluído com sucesso!\n\n" + payloadJson);
     window.location.href = '/login';
-    };
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
       
-      {/* Opcional: Adicionando a mesma textura de fundo do Login para consistência */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -83,7 +85,6 @@ export default function RegistroCliente() {
         }}
       />
 
-      {/* Aplicação da animação cardIn no container principal */}
       <div 
         className="relative z-10 w-full max-w-[420px] p-8 rounded-[24px] bg-[#141414] border border-[#222] shadow-2xl"
         style={{ animation: "cardIn 0.6s 0.05s cubic-bezier(.22,1,.36,1) both" }}
@@ -99,7 +100,6 @@ export default function RegistroCliente() {
         )}
       </div>
 
-      {/* Estilos de Animação */}
       <style>{`
         @keyframes cardIn {
           from { opacity: 0; transform: translateY(24px) scale(0.97); }
@@ -108,6 +108,12 @@ export default function RegistroCliente() {
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(15px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .loader-spin {
+          animation: spin 1s linear infinite;
         }
       `}</style>
     </div>
@@ -179,10 +185,57 @@ function RegisterStep1({ dados, atualizarDados, onNext, onBack }: any) {
 function RegisterStep2({ dados, atualizarDados, onNext, onBack }: any) {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [erro, setErro] = useState("");
+  
+  // Novos estados para a validação do e-mail
+  const [emailErro, setEmailErro] = useState("");
+  const [validandoEmail, setValidandoEmail] = useState(false);
+  const [emailDisponivel, setEmailDisponivel] = useState(false);
+
+  // Função que vai na API conferir o e-mail
+  const verificarEmailNoBanco = async (email: string) => {
+    if (!email || !email.includes("@")) {
+      setEmailDisponivel(false);
+      return;
+    }
+
+    setValidandoEmail(true);
+    setEmailErro("");
+    setEmailDisponivel(false);
+
+    try {
+      // AQUÍ ENTRA O SEU CÓDIGO REAL DE FETCH PARA A API:
+      // const response = await fetch(`https://sua-api.com/verificar-email?email=${email}`);
+      // if (response.status === 409) { // Exemplo: 409 Conflict se já existir
+      //   throw new Error("Este e-mail já está cadastrado.");
+      // }
+      
+      // Simulando um tempo de resposta da internet (remover no uso real)
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Simulando uma regra: se o email for 'teste@teste.com', ele bloqueia (remover no uso real)
+      if (email === "teste@teste.com") {
+        throw new Error("Este e-mail já está cadastrado.");
+      }
+
+      // Se passou por tudo sem cair no catch, o e-mail está disponível
+      setEmailDisponivel(true);
+
+    } catch (error: any) {
+      setEmailErro(error.message || "E-mail indisponível.");
+      setEmailDisponivel(false);
+    } finally {
+      setValidandoEmail(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErro("");
+
+    // Impede o avanço se o e-mail for inválido ou estiver validando
+    if (emailErro || validandoEmail) {
+      return; 
+    }
 
     if (dados.senha !== confirmarSenha) {
       setErro("As senhas não coincidem. Tente novamente.");
@@ -215,8 +268,40 @@ function RegisterStep2({ dados, atualizarDados, onNext, onBack }: any) {
       <div className="flex flex-col gap-4 mb-8">
         <div>
           <label className="block text-sm font-semibold text-white mb-2">E-mail</label>
-          <input required type="email" placeholder="seu@email.com" value={dados.email} onChange={(e) => atualizarDados({ email: e.target.value })} className="w-full bg-[#1c1c1c] border border-[#2a2a2a] text-white p-3.5 rounded-2xl outline-none focus:border-[#4a4a4a] transition-colors placeholder-[#6b7280] text-[15px]" />
+          <div className="relative">
+            <input 
+              required 
+              type="email" 
+              placeholder="seu@email.com" 
+              value={dados.email} 
+              onChange={(e) => {
+                atualizarDados({ email: e.target.value });
+                setEmailErro(""); // Limpa o erro ao digitar
+                setEmailDisponivel(false); // Remove o estado de 'OK' se a pessoa voltar a digitar
+              }}
+              onBlur={(e) => verificarEmailNoBanco(e.target.value)} // Dispara ao sair do campo
+              className={`w-full bg-[#1c1c1c] text-white p-3.5 rounded-2xl outline-none transition-colors placeholder-[#6b7280] text-[15px] border ${emailErro ? 'border-red-500' : emailDisponivel ? 'border-[#22c55e] focus:border-[#22c55e]' : 'border-[#2a2a2a] focus:border-[#4a4a4a]'}`} 
+            />
+            {/* Feedback visual de loading */}
+            {validandoEmail && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <svg className="loader-spin w-5 h-5 text-[#3b82f6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            )}
+            {/* Feedback visual de SUCESSO (E-mail disponível) */}
+            {emailDisponivel && !validandoEmail && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 animate-in zoom-in duration-300">
+                <Check size={20} className="text-[#22c55e]" strokeWidth={2.5} />
+              </div>
+            )}
+          </div>
+          {/* Mensagem de erro de e-mail */}
+          {emailErro && <p className="text-red-500 text-xs font-medium mt-1.5 animate-in fade-in">{emailErro}</p>}
         </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-white mb-2">Senha</label>
@@ -230,7 +315,11 @@ function RegisterStep2({ dados, atualizarDados, onNext, onBack }: any) {
         {erro && <p className="text-red-500 text-sm font-medium mt-1 animate-in fade-in">{erro}</p>}
       </div>
 
-      <button type="submit" className="w-full rounded-2xl font-semibold hover:bg-white active:scale-[0.98] transition-all cursor-pointer bg-[#f4f4f4] text-black py-4 border-none text-[15px]">
+      <button 
+        type="submit" 
+        disabled={validandoEmail || !!emailErro}
+        className={`w-full rounded-2xl font-semibold transition-all py-4 border-none text-[15px] ${validandoEmail || emailErro ? 'bg-[#333] text-[#777] cursor-not-allowed' : 'bg-[#f4f4f4] text-black hover:bg-white active:scale-[0.98] cursor-pointer'}`}
+      >
         Continuar
       </button>
     </form>
