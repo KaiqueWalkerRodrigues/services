@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { realizarLoginEmpresa } from "../../services/auth";
+import { Button } from "../../components/Button";
 
 // ─── Theme tokens ────────────────────────────────────────────────────────────
 type ThemeName = "dark" | "light";
