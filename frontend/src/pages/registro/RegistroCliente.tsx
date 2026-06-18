@@ -67,10 +67,6 @@ export default function RegistroCliente() {
     } catch (error) {
       console.error("Erro na requisição:", error);
     }
-    
-    // Simulação temporária (remover quando conectar com a API)
-    alert("Cadastro concluído com sucesso!\n\n" + payloadJson);
-    window.location.href = '/login';
   };
 
   return (
