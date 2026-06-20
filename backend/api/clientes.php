@@ -1,4 +1,6 @@
 <?php
+require("api/api.php");
+
 // CORS headers (allow the requesting origin and required headers)
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
 if ($origin && $origin !== '') {
@@ -18,10 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once 'class/classes.php';
+$metodo = $_SERVER['REQUEST_METHOD'];
 
 $cliente = new Cliente();
-$metodo = $_SERVER['REQUEST_METHOD'];
 
 switch ($metodo) {
     case 'GET':

@@ -1,5 +1,7 @@
 <?php
-header("Access-Control-Allow-Origin: *"); // Ajuste para o domínio do seu front em produção
+require("api/api.php");
+
+header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
@@ -10,17 +12,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once 'class/classes.php';
-
 $dados = json_decode(file_get_contents("php://input"));
 
-if (!empty($dados->login) && !empty($dados->senha)) {
+if (!empty($dados->email) && !empty($dados->senha)) {
 
     $origem = $dados->origem ?? 'web';
     $ip_address = $_SERVER['REMOTE_ADDR'];
 
-    $colaborador = new Colaborador();
-    $resultadoLogin = $colaborador->login($dados->login, $dados->senha, $origem, $ip_address);
+    $cliente = new Cliente();
+    $resultadoLogin = $cliente->login($dados->email, $dados->senha, $origem, $ip_address);
 
     if ($resultadoLogin['status'] === 'sucesso') {
         $usuario = $resultadoLogin['dados_usuario'];
@@ -28,10 +28,9 @@ if (!empty($dados->login) && !empty($dados->senha)) {
         // --- GERAÇÃO DO JWT ---
         $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
         $payload = base64_encode(json_encode([
-            'sub' => $usuario['id_colaborador'],
-            'tipo' => 'colaborador',
-            'id_empresa' => $usuario['id_empresa'],
-            'exp' => time() + (15 * 60)
+            'sub' => $usuario['id_cliente'],
+            'tipo' => 'cliente',
+            'exp' => time() + (10 * 60)
         ]));
 
         $secret = getenv('JWT_SECRET') ?: 'abc123';
@@ -41,9 +40,9 @@ if (!empty($dados->login) && !empty($dados->senha)) {
         // --- TRATATIVA PARA WEB (COOKIE) ---
         // Se for web, salvamos o JWT em um cookie seguro
         if ($origem === 'web') {
-            // Cookie para o Access Token (15 minutos)
+            // Cookie para o Access Token (10 minutos)
             setcookie("access_token", $token_jwt, [
-                'expires' => time() + (15 * 60),
+                'expires' => time() + (10 * 60),
                 'path' => '/',
                 'secure' => false, // Mude para true se estiver usando HTTPS
                 'httponly' => true,

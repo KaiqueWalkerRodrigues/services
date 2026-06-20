@@ -8,59 +8,137 @@ define('BASE_DIR', __DIR__ . '/api/');
 // Configura o cabeçalho para respostas JSON (padrão de API)
 header('Content-Type: application/json; charset=utf-8');
 
+require_once __DIR__ . '/class/classes.php';
+
 /**
- * Verifica se o usuário possui pelo menos um dos setores necessários.
+ * Verifica se o usuário possui pelo menos um dos grupos necessários.
  */
-function verificarSetor(array $setores_necessarios)
+function verificarSetor(array $grupos_necessarios)
 {
-    // Garante que a sessão possui os setores em formato de array
-    if (!isset($_SESSION['id_setores']) || !is_array($_SESSION['id_setores'])) {
+    if (!isset($_SESSION['id_grupos']) || !is_array($_SESSION['id_grupos'])) {
         return false;
     }
 
-    foreach ($_SESSION['id_setores'] as $setor_usuario) {
-        if (in_array($setor_usuario, $setores_necessarios)) {
+    foreach ($_SESSION['id_grupos'] as $setor_usuario) {
+        if (in_array($setor_usuario, $grupos_necessarios)) {
             return true;
         }
     }
     return false;
 }
 
+/**
+ * Retorna todos os headers da requisição.
+ */
+function obterHeaders()
+{
+    if (function_exists('getallheaders')) {
+        return getallheaders();
+    }
+
+    $headers = [];
+    foreach ($_SERVER as $name => $value) {
+        if (str_starts_with($name, 'HTTP_')) {
+            $headerName = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
+            $headers[$headerName] = $value;
+        }
+    }
+    return $headers;
+}
+
+/**
+ * Retorna o token Bearer ou o token do cookie.
+ */
+function obterTokenJwt()
+{
+    $headers = obterHeaders();
+    $authorization = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+
+    if ($authorization) {
+        return preg_replace('/^Bearer\s+/i', '', trim($authorization));
+    }
+
+    return $_COOKIE['access_token'] ?? null;
+}
+
+/**
+ * Verifica se a rota exige autenticação para o método HTTP atual.
+ */
+function rotaExigeLogin($loginConfig, $metodo)
+{
+    if (is_array($loginConfig)) {
+        return $loginConfig[$metodo] ?? $loginConfig['default'] ?? false;
+    }
+    return (bool) $loginConfig;
+}
+
 // 1. Captura e limpeza da URL requisitada
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$route = trim($requestUri, '/'); // Ex: 'api/login'
+$route = trim($requestUri, '/');
+$method = $_SERVER['REQUEST_METHOD'];
 
 // 2. Tabela de Rotas
-// Formato: 'caminho/na/url' => ['file' => 'arquivo.php', 'login' => bool, 'setores' => array|null]
+// Formato: 'caminho/na/url' => ['file' => 'arquivo.php', 'login' => bool|array, 'grupos' => array|null]
 $rotas = [
-    //auth
-    'api/auth/loginEmpresa' => [
-        'file' => 'auth/loginEmpresa.php',
+    // auth
+    'api/auth/loginCliente' => [
+        'file' => 'auth/loginCliente.php',
         'login' => false,
-        'setores' => null
+        'grupos' => null
+    ],
+    'api/auth/loginColaborador' => [
+        'file' => 'auth/loginColaborador.php',
+        'login' => false,
+        'grupos' => null
     ],
     'api/auth/refresh' => [
         'file' => 'auth/refresh.php',
         'login' => false,
-        'setores' => null
+        'grupos' => null
     ],
     'api/auth/logout' => [
         'file' => 'auth/logout.php',
-        'login' => false,
-        'setores' => null
+        'login' => true,
+        'grupos' => null
     ],
 
-    //colaboradores
+    // colaboradores
     'api/colaboradores' => [
         'file' => 'colaboradores.php',
-        'login' => false,
-        'setores' => null
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+            'DELETE' => true,
+            'POST' => false,
+            'default' => true
+        ],
+        'grupos' => null
     ],
-    //clientes
+
+    // clientes
     'api/clientes' => [
         'file' => 'clientes.php',
-        'login' => false,
-        'setores' => null
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+            'DELETE' => true,
+            'POST' => false,
+            'default' => true
+        ],
+        'grupos' => null
+    ],
+
+    // empresas
+    'api/empresas' => [
+        'file' => 'empresas.php',
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+            'DELETE' => true,
+            'POST' => true,
+            'default' => true
+        ],
+        'grupos' => null
     ],
 ];
 
@@ -69,22 +147,26 @@ if (array_key_exists($route, $rotas)) {
     $configRota = $rotas[$route];
     $file = $configRota['file'];
     $requiredLogin = $configRota['login'];
-    $requiredSectors = $configRota['setores'];
+    $requiredSectors = $configRota['grupos'];
 } else {
-    // Rota não registrada
     http_response_code(404);
     echo json_encode(["status" => "erro", "mensagem" => "Endpoint não encontrado (404)."]);
     exit;
 }
 
 // 4. Validação de Login
-if ($requiredLogin && empty($_SESSION['logado'])) {
-    http_response_code(401);
-    echo json_encode(["status" => "erro", "mensagem" => "Não autorizado. Faça login (401)."]);
-    exit;
+if (rotaExigeLogin($requiredLogin, $method)) {
+    $token = obterTokenJwt();
+    $dadosUsuario = $token ? AuthHelper::validarToken($token) : false;
+
+    if (!$dadosUsuario) {
+        http_response_code(401);
+        echo json_encode(["status" => "erro", "mensagem" => "Não autorizado. Faça login (401)."]);
+        exit;
+    }
 }
 
-// 5. Validação de Setores (Grupos)
+// 5. Validação de grupos (Grupos)
 if ($requiredSectors !== null) {
     if (!verificarSetor($requiredSectors)) {
         http_response_code(403);
@@ -97,7 +179,6 @@ if ($requiredSectors !== null) {
 $filePath = BASE_DIR . $file;
 
 if (file_exists($filePath)) {
-    // O arquivo incluído (ex: api/login.php) deve fazer os echos finais (ex: json_encode dos dados)
     include $filePath;
 } else {
     http_response_code(500);

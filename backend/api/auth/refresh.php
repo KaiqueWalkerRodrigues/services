@@ -1,4 +1,5 @@
 <?php
+require("api/api.php");
 // CORS headers for refresh endpoint
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
 if ($origin && $origin !== '') {
@@ -18,8 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once 'class/classes.php';
-
 $input = json_decode(file_get_contents("php://input"), true);
 $oldRefreshToken = $input['refresh_token'] ?? $_COOKIE['refresh_token'] ?? null;
 $tokenJwt = $input['access_token'] ?? $_COOKIE['access_token'] ?? null;
@@ -32,25 +31,48 @@ if (!$dadosUsuario || !$oldRefreshToken) {
     exit;
 }
 
-$colaborador = new Colaborador();
-$resultado = $colaborador->renovarSessao($dadosUsuario['sub'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
+// Decide qual classe usar para renovar a sessão com base no tipo do token
+$tipo = $dadosUsuario['tipo'] ?? null;
+if (!$tipo) {
+    http_response_code(400);
+    echo json_encode(["sucesso" => false, "mensagem" => "Tipo de usuário ausente no token."]);
+    exit;
+}
+
+$resultado = null;
+if ($tipo === 'colaborador') {
+    $objSessao = new Colaborador();
+    $resultado = $objSessao->renovarSessao($dadosUsuario['sub'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
+} elseif ($tipo === 'cliente') {
+    $objSessao = new Cliente();
+    $resultado = $objSessao->renovarSessao($dadosUsuario['sub'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
+} else {
+    http_response_code(400);
+    echo json_encode(["sucesso" => false, "mensagem" => "Tipo de usuário inválido: {$tipo}"]);
+    exit;
+}
 
 if ($resultado['status'] === 'sucesso') {
-    // 1. Gera um NOVO JWT (15 min)
+    // 1. Gera um NOVO JWT (10 min)
     $secret = getenv('JWT_SECRET') ?: 'abc123';
     $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-    $payload = base64_encode(json_encode([
+    $payloadArr = [
         'sub' => $dadosUsuario['sub'],
-        'tipo' => 'colaborador',
-        'id_empresa' => $dadosUsuario['id_empresa'],
-        'exp' => time() + (15 * 60)
-    ]));
+        'tipo' => $tipo,
+        'exp' => time() + (10 * 60)
+    ];
+
+    if ($tipo === 'colaborador' && isset($dadosUsuario['id_empresa'])) {
+        $payloadArr['id_empresa'] = $dadosUsuario['id_empresa'];
+    }
+
+    $payload = base64_encode(json_encode($payloadArr));
     $signature = base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true));
     $newJwt = "$header.$payload.$signature";
 
     // 2. Atualiza os Cookies no navegador do usuário
     setcookie("access_token", $newJwt, [
-        'expires' => time() + (15 * 60),
+        'expires' => time() + (10 * 60),
         'path' => '/',
         'httponly' => true,
         'samesite' => 'Strict'

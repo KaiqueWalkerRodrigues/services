@@ -23,31 +23,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $metodo = $_SERVER['REQUEST_METHOD'];
 
 // 2. Lógica da API protegida
-$colaborador = new Colaborador();
+$empresa = new Empresa();
 
 switch ($metodo) {
     case 'GET':
         if (isset($_GET['id'])) {
-            echo json_encode($colaborador->mostrar($_GET['id']));
+            echo json_encode($empresa->mostrar($_GET['id']));
         } else {
-            echo json_encode($colaborador->listar());
+            echo json_encode($empresa->listar());
         }
         break;
 
     case 'POST':
-        // Aqui você pode permitir apenas o cadastro
         $data = json_decode(file_get_contents("php://input"));
-        echo json_encode($colaborador->cadastrar($data->id_empresa, $data->id_grupo, $data->nome, $data->login, $data->senha));
+        echo json_encode($empresa->cadastrar($data->codigo_empresa, $data->nome));
         break;
 
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
-        echo json_encode($colaborador->editar($data->id_colaborador, $data->id_empresa, $data->id_grupo, $data->nome, $data->login, $data->senha ?? null));
+        echo json_encode($empresa->editar($data->id_empresa, $data->codigo_empresa, $data->nome));
         break;
 
     case 'DELETE':
         $data = json_decode(file_get_contents("php://input"));
-        echo json_encode($colaborador->deletar($data->id_colaborador));
+        echo json_encode($empresa->deletar($data->id_empresa));
         break;
 
     default:
