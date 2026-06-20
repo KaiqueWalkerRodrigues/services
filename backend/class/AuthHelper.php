@@ -47,4 +47,38 @@ class AuthHelper
         // 3. Retorna os dados sem checar o 'exp'
         return $payloadData;
     }
+
+    /**
+     * Retorna todos os headers da requisição.
+     */
+    public static function obterHeaders()
+    {
+        if (function_exists('getallheaders')) {
+            return getallheaders();
+        }
+
+        $headers = [];
+        foreach ($_SERVER as $name => $value) {
+            if (str_starts_with($name, 'HTTP_')) {
+                $headerName = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
+                $headers[$headerName] = $value;
+            }
+        }
+        return $headers;
+    }
+
+    /**
+     * Retorna o token Bearer ou o token do cookie.
+     */
+    public static function obterTokenJwt()
+    {
+        $headers = self::obterHeaders();
+        $authorization = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+
+        if ($authorization) {
+            return preg_replace('/^Bearer\\s+/i', '', trim($authorization));
+        }
+
+        return $_COOKIE['access_token'] ?? null;
+    }
 }

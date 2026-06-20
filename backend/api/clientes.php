@@ -22,15 +22,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 
+$token = AuthHelper::obterTokenJwt();
+$dadosUsuario = $token ? AuthHelper::validarToken($token) : false;
+$loginValido = (bool) $dadosUsuario;
+
 $cliente = new Cliente();
 
 switch ($metodo) {
     case 'GET':
         // Se passar um ID na URL: api/clientes.php?id=1
         if (isset($_GET['id'])) {
-            echo json_encode($cliente->mostrar($_GET['id']));
-        } else {
+            if ($loginValido) {
+                echo json_encode($cliente->mostrar($_GET['id']));
+            } else {
+                http_response_code(401);
+                echo json_encode(["mensagem" => "Não autorizado"]);
+            }
+            break;
+        }
+
+        if (isset($_GET['email'])) {
+            echo json_encode(['exists' => $cliente->consultarEmail($_GET['email'])]);
+            break;
+        }
+
+        if ($loginValido) {
             echo json_encode($cliente->listar());
+        } else {
+            http_response_code(401);
+            echo json_encode(["mensagem" => "Não autorizado"]);
         }
         break;
 

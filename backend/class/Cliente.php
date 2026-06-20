@@ -247,4 +247,22 @@ class Cliente
             return ['status' => 'erro', 'mensagem' => 'Erro interno: ' . $e->getMessage()];
         }
     }
+
+    public function consultarEmail($email)
+    {
+        try {
+            $sql = "SELECT id_cliente 
+                    FROM clientes 
+                    WHERE email = :email AND deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':email', $email);
+            $stmt->execute();
+            $dados = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return (bool) $dados;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
 }
