@@ -5,4 +5,6 @@ if (!defined('BASE_DIR')) {
     exit('Acesso restrito.');
 }
 
+$apiSubpath = $_SERVER['API_SUBPATH'] ?? '';
+
 require_once __DIR__ . '/../class/classes.php';

@@ -41,7 +41,12 @@ switch ($metodo) {
             break;
         }
 
-        if (isset($_GET['email'])) {
+        if ($apiSubpath === 'consultar-email') {
+            if (!isset($_GET['email'])) {
+                http_response_code(400);
+                echo json_encode(["mensagem" => "Parâmetro email é obrigatório"]);
+                break;
+            }
             echo json_encode(['exists' => $cliente->consultarEmail($_GET['email'])]);
             break;
         }

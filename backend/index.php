@@ -143,16 +143,39 @@ $rotas = [
 ];
 
 // 3. Processamento da Rota
+$matchedRoute = null;
 if (array_key_exists($route, $rotas)) {
+    $matchedRoute = $route;
     $configRota = $rotas[$route];
     $file = $configRota['file'];
     $requiredLogin = $configRota['login'];
     $requiredSectors = $configRota['grupos'];
 } else {
-    http_response_code(404);
-    echo json_encode(["status" => "erro", "mensagem" => "Endpoint não encontrado (404)."]);
-    exit;
+    $configRota = null;
+    foreach ($rotas as $rotaBase => $config) {
+        if ($rotaBase !== '' && str_starts_with($route, $rotaBase . '/')) {
+            $matchedRoute = $rotaBase;
+            $configRota = $config;
+            $file = $config['file'];
+            $requiredLogin = $config['login'];
+            $requiredSectors = $config['grupos'];
+            break;
+        }
+    }
+
+    if ($configRota === null) {
+        http_response_code(404);
+        echo json_encode(["status" => "erro", "mensagem" => "Endpoint não encontrado (404)."]);
+        exit;
+    }
 }
+
+$apiSubpath = '';
+if ($matchedRoute !== null && $matchedRoute !== $route) {
+    $apiSubpath = substr($route, strlen($matchedRoute) + 1);
+}
+$_SERVER['API_ROUTE_BASE'] = $matchedRoute;
+$_SERVER['API_SUBPATH'] = $apiSubpath;
 
 // 4. Validação de Login
 if (rotaExigeLogin($requiredLogin, $method)) {
