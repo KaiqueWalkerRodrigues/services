@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $metodo = $_SERVER['REQUEST_METHOD'];
+$apiSubpath = $_SERVER['API_SUBPATH'] ?? '';
 
 $token = AuthHelper::obterTokenJwt();
 $dadosUsuario = $token ? AuthHelper::validarToken($token) : false;

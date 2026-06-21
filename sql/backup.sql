@@ -37,7 +37,7 @@ CREATE TABLE `acessos_tokens` (
   KEY `fk_tokens_clientes_idx` (`id_cliente`),
   CONSTRAINT `fk_tokens_clientes` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE,
   CONSTRAINT `fk_tokens_colaboradores` FOREIGN KEY (`id_colaborador`) REFERENCES `colaboradores` (`id_colaborador`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -46,6 +46,7 @@ CREATE TABLE `acessos_tokens` (
 
 LOCK TABLES `acessos_tokens` WRITE;
 /*!40000 ALTER TABLE `acessos_tokens` DISABLE KEYS */;
+INSERT INTO `acessos_tokens` VALUES (1,NULL,1,'caf80680cf06a619c5cc3a3f454a45c3aa829eed0e2ead8872ef40a86b6dd8dc','web','172.18.0.1','2026-07-21 16:56:40','2026-06-21 16:56:40');
 /*!40000 ALTER TABLE `acessos_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -138,7 +139,7 @@ CREATE TABLE `clientes` (
   PRIMARY KEY (`id_cliente`),
   UNIQUE KEY `email_UNIQUE` (`email`),
   UNIQUE KEY `celular_UNIQUE` (`celular`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -147,6 +148,7 @@ CREATE TABLE `clientes` (
 
 LOCK TABLES `clientes` WRITE;
 /*!40000 ALTER TABLE `clientes` DISABLE KEYS */;
+INSERT INTO `clientes` VALUES (1,'Teste cliente','test@gmail.com','$2y$10$9SoVefrW6WglQZb82LIe2eJ9nqgFdWYtRJZAaerMtnC3PC24yfSru',NULL,'2026-06-21 16:56:26','2026-06-21 16:56:26',NULL);
 /*!40000 ALTER TABLE `clientes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -336,6 +338,32 @@ INSERT INTO `grupos` VALUES (1,'Teste','2026-06-14 19:13:59','2026-06-14 19:13:5
 UNLOCK TABLES;
 
 --
+-- Table structure for table `grupos_permissoes`
+--
+
+DROP TABLE IF EXISTS `grupos_permissoes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `grupos_permissoes` (
+  `id_grupo` int NOT NULL,
+  `id_permissao` int NOT NULL,
+  PRIMARY KEY (`id_grupo`,`id_permissao`),
+  KEY `fk_gp_permissao` (`id_permissao`),
+  CONSTRAINT `fk_gp_grupo` FOREIGN KEY (`id_grupo`) REFERENCES `grupos` (`id_grupo`),
+  CONSTRAINT `fk_gp_permissao` FOREIGN KEY (`id_permissao`) REFERENCES `permissoes` (`id_permissao`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `grupos_permissoes`
+--
+
+LOCK TABLES `grupos_permissoes` WRITE;
+/*!40000 ALTER TABLE `grupos_permissoes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `grupos_permissoes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `parametros_empresas`
 --
 
@@ -426,6 +454,30 @@ LOCK TABLES `parametros_filial` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `permissoes`
+--
+
+DROP TABLE IF EXISTS `permissoes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `permissoes` (
+  `id_permissao` int NOT NULL AUTO_INCREMENT,
+  `slug` varchar(100) NOT NULL,
+  `descricao` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id_permissao`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `permissoes`
+--
+
+LOCK TABLES `permissoes` WRITE;
+/*!40000 ALTER TABLE `permissoes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `permissoes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `servicos`
 --
 
@@ -465,4 +517,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-17 21:11:52
+-- Dump completed on 2026-06-21 14:02:15
