@@ -286,7 +286,7 @@ class Colaborador
     public function obterPermissoesGrupo($id_grupo)
     {
         try {
-            $sql = "SELECT p.nome_permissao 
+            $sql = "SELECT p.slug 
                 FROM permissoes p
                 INNER JOIN grupos_permissoes gp ON p.id_permissao = gp.id_permissao
                 WHERE gp.id_grupo = :id_grupo 
@@ -317,7 +317,7 @@ class Colaborador
         try {
             $placeholders = implode(',', array_fill(0, count($ids_grupos), '?'));
             // A estrutura de JOIN permanece funcional mesmo com a nova PK
-            $sql = "SELECT DISTINCT p.nome_permissao 
+            $sql = "SELECT DISTINCT p.slug 
                 FROM permissoes p
                 INNER JOIN grupos_permissoes gp ON p.id_permissao = gp.id_permissao
                 WHERE gp.id_grupo IN ($placeholders)

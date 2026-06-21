@@ -29,16 +29,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
         $grupos = $colaborador->obterGruposColaborador($usuario['id_colaborador']);
         $ids_grupos = array_column($grupos, 'id_grupo');
 
-        // 2. Determina se é Super Admin (basta um dos grupos ter is_sa = 1)
-        $is_sa = false;
-        foreach ($grupos as $g) {
-            // Buscamos o dado real no banco para confirmar o is_sa do grupo
-            $dadosG = $colaborador->obterDadosGrupo($g['id_grupo']);
-            if ($dadosG['is_sa']) {
-                $is_sa = true;
-                break;
-            }
-        }
+        $is_sa = $usuario['is_sa'];
 
         // 3. Busca permissões agregadas de todos os grupos
         // Se for Super Admin, ganha acesso total ['*']
@@ -53,7 +44,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
             'sub' => (int)$usuario['id_colaborador'],
             'tipo' => 'colaborador',
             'is_sa' => (bool)$is_sa,
-            'grupos' => $ids_grupos, // Adicionando a lista de IDs de grupos aqui
+            'grupos' => $ids_grupos,
             'permissoes' => $permissoes,
             'empresas_acesso' => $empresas_acesso,
             'exp' => time() + (10 * 60)

@@ -35,7 +35,6 @@ switch ($metodo) {
         break;
 
     case 'POST':
-        // Aqui você pode permitir apenas o cadastro
         $data = json_decode(file_get_contents("php://input"));
         echo json_encode($colaborador->cadastrar($data->id_empresa, $data->id_grupo, $data->nome, $data->login, $data->senha));
         break;

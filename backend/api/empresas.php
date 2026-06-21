@@ -29,6 +29,11 @@ switch ($metodo) {
         break;
 
     case 'PUT':
+        if (!AuthHelper::usuarioTemPermissao("empresas.editar", $dadosUsuario)) {
+            http_response_code(403);
+            echo json_encode(["erro" => "Sem Permissão"]);
+            exit;
+        }
         $data = json_decode(file_get_contents("php://input"));
         echo json_encode($empresa->editar($data->id_empresa, $data->codigo_empresa, $data->nome));
         break;
