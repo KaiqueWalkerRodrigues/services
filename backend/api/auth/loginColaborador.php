@@ -1,7 +1,7 @@
 <?php
 require("api/api.php");
 
-// 1. Mantenha os headers (se não migrou para api.php ainda)
+// Headers CORS...
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -24,23 +24,27 @@ if (!empty($dados->login) && !empty($dados->senha)) {
     if ($resultadoLogin['status'] === 'sucesso') {
         $usuario = $resultadoLogin['dados_usuario'];
 
-        // --- PROTEÇÃO: Use coalescência nula (??) para evitar Undefined Index ---
-        $id_grupo_usuario = $usuario['id_grupo'] ?? null;
+        // --- BUSCA DE DADOS DE RBAC (Múltiplos Grupos) ---
+        // 1. Busca todos os grupos vinculados ao colaborador
+        $grupos = $colaborador->obterGruposColaborador($usuario['id_colaborador']);
+        $ids_grupos = array_column($grupos, 'id_grupo');
 
-        // Se id_grupo for null, busca os grupos através da tabela de relacionamento
-        if (!$id_grupo_usuario) {
-            $grupos = $colaborador->obterGruposColaborador($usuario['id_colaborador']);
-            $id_grupo_usuario = !empty($grupos) ? $grupos[0]['id_grupo'] : null;
+        // 2. Determina se é Super Admin (basta um dos grupos ter is_sa = 1)
+        $is_sa = false;
+        foreach ($grupos as $g) {
+            // Buscamos o dado real no banco para confirmar o is_sa do grupo
+            $dadosG = $colaborador->obterDadosGrupo($g['id_grupo']);
+            if ($dadosG['is_sa']) {
+                $is_sa = true;
+                break;
+            }
         }
 
-        // --- BUSCA DE DADOS DE RBAC E ESCOPO ---
-        // Agora usamos o $id_grupo_usuario que garantimos existir
-        $dadosGrupo = $id_grupo_usuario ? $colaborador->obterDadosGrupo($id_grupo_usuario) : ['is_sa' => false, 'nome_grupo' => null];
+        // 3. Busca permissões agregadas de todos os grupos
+        // Se for Super Admin, ganha acesso total ['*']
+        $permissoes = $is_sa ? ['*'] : $colaborador->obterPermissoesGrupos($ids_grupos);
 
-        $is_sa = $usuario['is_sa'] ?? $dadosGrupo['is_sa']; // Prioriza o is_sa do usuário, senão do grupo
-        $nome_grupo = $dadosGrupo['nome_grupo'];
-
-        $permissoes = $id_grupo_usuario ? $colaborador->obterPermissoesGrupo($id_grupo_usuario) : [];
+        // 4. Busca empresas de acesso
         $empresas_acesso = $colaborador->obterEmpresasAcesso($usuario['id_colaborador']);
 
         // --- GERAÇÃO DO JWT ---
@@ -48,10 +52,8 @@ if (!empty($dados->login) && !empty($dados->senha)) {
         $payloadArray = [
             'sub' => (int)$usuario['id_colaborador'],
             'tipo' => 'colaborador',
-            'id_empresa' => (int)$usuario['id_empresa'],
-            'id_grupo' => (int)$id_grupo_usuario,
-            'nome_grupo' => $nome_grupo,
             'is_sa' => (bool)$is_sa,
+            'grupos' => $ids_grupos, // Adicionando a lista de IDs de grupos aqui
             'permissoes' => $permissoes,
             'empresas_acesso' => $empresas_acesso,
             'exp' => time() + (10 * 60)
@@ -62,20 +64,10 @@ if (!empty($dados->login) && !empty($dados->senha)) {
         $signature = base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true));
         $token_jwt = "$header.$payload.$signature";
 
-        // --- COOKIES (Removidos warnings antes disso) ---
+        // --- COOKIES E RESPOSTA ---
         if ($origem === 'web') {
-            setcookie("access_token", $token_jwt, [
-                'expires' => time() + (10 * 60),
-                'path' => '/',
-                'httponly' => true,
-                'samesite' => 'Strict'
-            ]);
-            setcookie("refresh_token", $resultadoLogin['refresh_token'], [
-                'expires' => time() + (30 * 24 * 60 * 60),
-                'path' => '/',
-                'httponly' => true,
-                'samesite' => 'Strict'
-            ]);
+            setcookie("access_token", $token_jwt, ['expires' => time() + (10 * 60), 'path' => '/', 'httponly' => true, 'samesite' => 'Strict']);
+            setcookie("refresh_token", $resultadoLogin['refresh_token'], ['expires' => time() + (30 * 24 * 60 * 60), 'path' => '/', 'httponly' => true, 'samesite' => 'Strict']);
         }
 
         http_response_code(200);
@@ -84,8 +76,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
             "access_token" => ($origem === 'mobile') ? $token_jwt : null,
             "refresh_token" => $resultadoLogin['refresh_token'],
             "usuario" => [
-                "id_colaborador" => $usuario['id_colaborador'],
-                "id_empresa" => $usuario['id_empresa'],
+                "id_colaborador" => (int)$usuario['id_colaborador'],
                 "login" => $usuario['login']
             ],
             "rbac" => [
