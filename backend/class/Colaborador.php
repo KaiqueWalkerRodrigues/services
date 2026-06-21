@@ -154,8 +154,8 @@ class Colaborador
     public function login($login, $senha, $origem, $ip_address = null)
     {
         try {
-            // 1. Busca o colaborador pelo login
-            $sql = "SELECT id_colaborador, id_empresa, id_grupo, login, senha 
+            // 1. Busca colaborador (is_sa agora está na tabela colaboradores)
+            $sql = "SELECT id_colaborador, id_empresa, login, senha, is_sa 
                     FROM colaboradores 
                     WHERE login = :login AND deleted_at IS NULL LIMIT 1";
 
@@ -164,10 +164,24 @@ class Colaborador
             $stmt->execute();
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // 2. Valida se o usuário existe e se a senha está correta
             if ($usuario && password_verify($senha, $usuario['senha'])) {
+                unset($usuario['senha']);
 
-                // 3. Gera um Refresh Token seguro (64 caracteres)
+                // 2. Converta is_sa para booleano real
+                $usuario['is_sa'] = (bool) ($usuario['is_sa'] ?? false);
+
+                // 3. Obtém todos os grupos (Múltiplos grupos)
+                $grupos = $this->obterGruposColaborador($usuario['id_colaborador']);
+                $ids_grupos = array_column($grupos, 'id_grupo');
+
+                // 4. Obtém permissões agregadas de todos os grupos
+                // Se for Super Admin, ganha '*' automaticamente
+                $permissoes = $usuario['is_sa'] ? ['*'] : $this->obterPermissoesGrupos($ids_grupos);
+
+                // 5. Obtém todas as empresas vinculadas
+                $empresas_acesso = $this->obterEmpresasAcesso($usuario['id_colaborador']);
+
+                // 6. Gera Refresh Token
                 $refreshToken = bin2hex(random_bytes(32));
 
                 // 4. Limpar sessoes da mesma origem ativa
@@ -192,27 +206,21 @@ class Colaborador
                 $stmtToken->bindParam(':ip_address', $ip_address);
                 $stmtToken->execute();
 
-                // 6. Remove a senha do array antes de retornar para não expor dados sensíveis
-                unset($usuario['senha']);
-
                 return [
                     'status' => 'sucesso',
                     'mensagem' => 'Login aprovado.',
                     'dados_usuario' => $usuario,
-                    'refresh_token' => $refreshToken
+                    'refresh_token' => $refreshToken,
+                    'is_sa' => $usuario['is_sa'],
+                    'grupos' => $grupos,
+                    'permissoes' => $permissoes,
+                    'empresas_acesso' => $empresas_acesso
                 ];
             } else {
-                return [
-                    'status' => 'erro',
-                    'mensagem' => 'Login ou senha incorretos.'
-                ];
+                return ['status' => 'erro', 'mensagem' => 'Login ou senha incorretos.'];
             }
         } catch (PDOException $e) {
-            http_response_code(500);
-            return [
-                'status' => 'erro',
-                'mensagem' => 'Erro interno ao realizar login: ' . $e->getMessage()
-            ];
+            return ['status' => 'erro', 'mensagem' => 'Erro interno: ' . $e->getMessage()];
         }
     }
 
@@ -264,6 +272,188 @@ class Colaborador
             ];
         } catch (PDOException $e) {
             return ['status' => 'erro', 'mensagem' => 'Erro interno: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Obtém as permissões de um grupo específico.
+     * Retorna um array com os nomes de permissões (strings).
+     */
+    /**
+     * Obtém as permissões de um grupo específico.
+     * Retorna um array com os nomes de permissões (strings).
+     */
+    public function obterPermissoesGrupo($id_grupo)
+    {
+        try {
+            $sql = "SELECT p.nome_permissao 
+                FROM permissoes p
+                INNER JOIN grupos_permissoes gp ON p.id_permissao = gp.id_permissao
+                WHERE gp.id_grupo = :id_grupo 
+                AND gp.deleted_at IS NULL
+                AND p.deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_grupo', $id_grupo);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        } catch (PDOException $e) {
+            error_log('Erro ao obter permissões do grupo: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtém as permissões agregadas de múltiplos grupos.
+     * Retorna um array com os nomes de permissões (strings) de todos os grupos.
+     */
+    public function obterPermissoesGrupos(array $ids_grupos)
+    {
+        if (empty($ids_grupos)) {
+            return [];
+        }
+
+        try {
+            $placeholders = implode(',', array_fill(0, count($ids_grupos), '?'));
+            // A estrutura de JOIN permanece funcional mesmo com a nova PK
+            $sql = "SELECT DISTINCT p.nome_permissao 
+                FROM permissoes p
+                INNER JOIN grupos_permissoes gp ON p.id_permissao = gp.id_permissao
+                WHERE gp.id_grupo IN ($placeholders)
+                AND gp.deleted_at IS NULL
+                AND p.deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sql);
+            foreach (array_values($ids_grupos) as $index => $id_grupo) {
+                $stmt->bindValue($index + 1, $id_grupo, PDO::PARAM_INT);
+            }
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        } catch (PDOException $e) {
+            error_log('Erro ao obter permissões dos grupos: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtém todos os grupos do colaborador.
+     * Tenta primeiro a tabela colaboradores_grupos, depois fallback para grupos via colaboradores.id_grupo.
+     */
+    public function obterGruposColaborador($id_colaborador)
+    {
+        try {
+            $sql = "SELECT g.id_grupo, g.nome as nome_grupo 
+                FROM colaboradores_grupos cg
+                INNER JOIN grupos g ON cg.id_grupo = g.id_grupo
+                WHERE cg.id_colaborador = :id_colaborador
+                AND cg.deleted_at IS NULL
+                AND g.deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+            $stmt->execute();
+
+            $grupos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($grupos)) {
+                return $grupos;
+            }
+
+            $sqlFallback = "SELECT g.id_grupo, g.nome_grupo \
+                            FROM grupos g
+                            INNER JOIN colaboradores c ON c.id_grupo = g.id_grupo
+                            WHERE c.id_colaborador = :id_colaborador
+                            AND c.deleted_at IS NULL
+                            AND g.deleted_at IS NULL";
+
+            $stmtFallback = $this->pdo->prepare($sqlFallback);
+            $stmtFallback->bindParam(':id_colaborador', $id_colaborador);
+            $stmtFallback->execute();
+            $resultado = $stmtFallback->fetch(PDO::FETCH_ASSOC);
+
+            return $resultado ? [$resultado] : [];
+        } catch (PDOException $e) {
+            error_log('Erro ao obter grupos do colaborador: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtém o flag 'is_sa' (Super Admin) e o nome do grupo de um colaborador.
+     * Retorna array: ['is_sa' => bool, 'nome_grupo' => string]
+     */
+    public function obterDadosGrupo($id_grupo)
+    {
+        try {
+            $sql = "SELECT is_sa, nome_grupo FROM grupos WHERE id_grupo = :id_grupo AND deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_grupo', $id_grupo);
+            $stmt->execute();
+
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($resultado) {
+                return [
+                    'is_sa' => (bool) $resultado['is_sa'],
+                    'nome_grupo' => $resultado['nome_grupo']
+                ];
+            }
+
+            return ['is_sa' => false, 'nome_grupo' => null];
+        } catch (PDOException $e) {
+            error_log('Erro ao obter dados do grupo: ' . $e->getMessage());
+            return ['is_sa' => false, 'nome_grupo' => null];
+        }
+    }
+
+    /**
+     * Obtém o array de empresas às quais o colaborador tem acesso.
+     * Pode consultar:
+     * 1. Tabela 'vinculacoes' se o colaborador estiver vinculado a múltiplas empresas
+     * 2. Ou apenas 'id_empresa' da coluna colaboradores como fallback
+     * 
+     * Retorna array de IDs: [1, 2, 3, ...]
+     */
+    public function obterEmpresasAcesso($id_colaborador)
+    {
+        try {
+            // 1. Tenta buscar na tabela vinculacoes (permite múltiplas empresas)
+            $sqlVinculacoes = "SELECT DISTINCT id_empresa FROM vinculacoes 
+                               WHERE id_colaborador = :id_colaborador 
+                               AND deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sqlVinculacoes);
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+            $stmt->execute();
+
+            $empresas = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            // Se houver vinculações explícitas, retorna
+            if (!empty($empresas)) {
+                return array_map('intval', $empresas);
+            }
+
+            // 2. Fallback: busca id_empresa diretamente da tabela colaboradores
+            $sqlFallback = "SELECT id_empresa FROM colaboradores 
+                            WHERE id_colaborador = :id_colaborador 
+                            AND deleted_at IS NULL";
+
+            $stmtFallback = $this->pdo->prepare($sqlFallback);
+            $stmtFallback->bindParam(':id_colaborador', $id_colaborador);
+            $stmtFallback->execute();
+
+            $resultado = $stmtFallback->fetch(PDO::FETCH_ASSOC);
+
+            if ($resultado && $resultado['id_empresa']) {
+                return [(int) $resultado['id_empresa']];
+            }
+
+            return [];
+        } catch (PDOException $e) {
+            error_log('Erro ao obter empresas de acesso: ' . $e->getMessage());
+            return [];
         }
     }
 }

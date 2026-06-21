@@ -11,20 +11,20 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/class/classes.php';
 
 /**
- * Verifica se o usuário possui pelo menos um dos grupos necessários.
+ * Verifica se o usuário possui as permissões necessárias (baseado no JWT).
+ * Suporta tanto a verificação por permissões quanto a compatibilidade com a antiga lógica de grupos.
  */
-function verificarSetor(array $grupos_necessarios)
+function verificarPermissoes($permissoesRequeridas, $dadosUsuario)
 {
-    if (!isset($_SESSION['id_grupos']) || !is_array($_SESSION['id_grupos'])) {
+    if ($permissoesRequeridas === null) {
+        return true; // Sem requerimento de permissão
+    }
+
+    if (!$dadosUsuario) {
         return false;
     }
 
-    foreach ($_SESSION['id_grupos'] as $setor_usuario) {
-        if (in_array($setor_usuario, $grupos_necessarios)) {
-            return true;
-        }
-    }
-    return false;
+    return AuthHelper::usuarioTemPermissao($permissoesRequeridas, $dadosUsuario);
 }
 
 /**
@@ -78,28 +78,30 @@ $route = trim($requestUri, '/');
 $method = $_SERVER['REQUEST_METHOD'];
 
 // 2. Tabela de Rotas
-// Formato: 'caminho/na/url' => ['file' => 'arquivo.php', 'login' => bool|array, 'grupos' => array|null]
+// Formato: 'caminho/na/url' => ['file' => 'arquivo.php', 'login' => bool|array, 'permissoes' => array|null]
+// 'login' pode ser: false (aberto), true (requer login), ou array com métodos específicos
+// 'permissoes' é um array de strings com nomes de permissões requeridas (ex: ['create_user', 'edit_user'])
 $rotas = [
     // auth
     'api/auth/loginCliente' => [
         'file' => 'auth/loginCliente.php',
         'login' => false,
-        'grupos' => null
+        'permissoes' => null
     ],
     'api/auth/loginColaborador' => [
         'file' => 'auth/loginColaborador.php',
         'login' => false,
-        'grupos' => null
+        'permissoes' => null
     ],
     'api/auth/refresh' => [
         'file' => 'auth/refresh.php',
         'login' => false,
-        'grupos' => null
+        'permissoes' => null
     ],
     'api/auth/logout' => [
         'file' => 'auth/logout.php',
         'login' => true,
-        'grupos' => null
+        'permissoes' => null
     ],
 
     // colaboradores
@@ -112,7 +114,7 @@ $rotas = [
             'POST' => false,
             'default' => true
         ],
-        'grupos' => null
+        'permissoes' => null
     ],
 
     // clientes
@@ -125,7 +127,7 @@ $rotas = [
             'POST' => false,
             'default' => true
         ],
-        'grupos' => null
+        'permissoes' => null
     ],
 
     // empresas
@@ -138,7 +140,7 @@ $rotas = [
             'POST' => true,
             'default' => true
         ],
-        'grupos' => null
+        'permissoes' => null
     ],
 ];
 
@@ -149,7 +151,7 @@ if (array_key_exists($route, $rotas)) {
     $configRota = $rotas[$route];
     $file = $configRota['file'];
     $requiredLogin = $configRota['login'];
-    $requiredSectors = $configRota['grupos'];
+    $requiredPermissoes = $configRota['permissoes'];
 } else {
     $configRota = null;
     foreach ($rotas as $rotaBase => $config) {
@@ -158,7 +160,7 @@ if (array_key_exists($route, $rotas)) {
             $configRota = $config;
             $file = $config['file'];
             $requiredLogin = $config['login'];
-            $requiredSectors = $config['grupos'];
+            $requiredPermissoes = $config['permissoes'];
             break;
         }
     }
@@ -178,8 +180,9 @@ $_SERVER['API_ROUTE_BASE'] = $matchedRoute;
 $_SERVER['API_SUBPATH'] = $apiSubpath;
 
 // 4. Validação de Login
+$dadosUsuario = null;
 if (rotaExigeLogin($requiredLogin, $method)) {
-    $token = obterTokenJwt();
+    $token = AuthHelper::obterTokenJwt();
     $dadosUsuario = $token ? AuthHelper::validarToken($token) : false;
 
     if (!$dadosUsuario) {
@@ -187,13 +190,19 @@ if (rotaExigeLogin($requiredLogin, $method)) {
         echo json_encode(["status" => "erro", "mensagem" => "Não autorizado. Faça login (401)."]);
         exit;
     }
+} else {
+    // Mesmo que a rota não exija login, podemos tentar extrair os dados do token se existir
+    $token = AuthHelper::obterTokenJwt();
+    if ($token) {
+        $dadosUsuario = AuthHelper::validarToken($token);
+    }
 }
 
-// 5. Validação de grupos (Grupos)
-if ($requiredSectors !== null) {
-    if (!verificarSetor($requiredSectors)) {
+// 5. Validação de Permissões (RBAC baseado em JWT)
+if ($requiredPermissoes !== null && $dadosUsuario) {
+    if (!verificarPermissoes($requiredPermissoes, $dadosUsuario)) {
         http_response_code(403);
-        echo json_encode(["status" => "erro", "mensagem" => "Acesso negado para o seu setor (403)."]);
+        echo json_encode(["status" => "erro", "mensagem" => "Acesso negado. Permissões insuficientes (403)."]);
         exit;
     }
 }

@@ -53,19 +53,13 @@ if ($tipo === 'colaborador') {
 }
 
 if ($resultado['status'] === 'sucesso') {
-    // 1. Gera um NOVO JWT (10 min)
+    // 1. Gera um NOVO JWT (10 min) preservando os dados do payload anterior
     $secret = getenv('JWT_SECRET') ?: 'abc123';
     $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-    $payloadArr = [
-        'sub' => $dadosUsuario['sub'],
-        'tipo' => $tipo,
-        'exp' => time() + (10 * 60)
-    ];
 
-    if ($tipo === 'colaborador' && isset($dadosUsuario['id_empresa'])) {
-        $payloadArr['id_empresa'] = $dadosUsuario['id_empresa'];
-    }
-
+    $payloadArr = is_array($dadosUsuario) ? $dadosUsuario : [];
+    unset($payloadArr['exp']);
+    $payloadArr['exp'] = time() + (10 * 60);
     $payload = base64_encode(json_encode($payloadArr));
     $signature = base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true));
     $newJwt = "$header.$payload.$signature";
