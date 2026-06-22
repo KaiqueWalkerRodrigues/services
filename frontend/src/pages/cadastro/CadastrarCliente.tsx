@@ -104,7 +104,9 @@ export default function CadastrarCliente() {
           window.location.href = "/login";
         }, 1250);
       } else {
-        toast.error("Erro ao processar o cadastro no servidor.", { duration: 1250 });
+        toast.error("Erro ao processar o cadastro no servidor.", {
+          duration: 1250,
+        });
       }
     } catch (error) {
       toast.error("Erro na requisição.", { duration: 1250 });
@@ -165,9 +167,21 @@ function RegisterStep1({ dados, atualizarDados, onNext, onBack }: any) {
 
     try {
       // AQUÍ ENTRA O SEU CÓDIGO REAL DA API (exemplo):
-      // const celularLimpo = celular.replace(/\D/g, "");
-      // const response = await fetch(`http://localhost:81/api/clientes/verificar-celular?celular=${celularLimpo}`);
-      // if (!response.ok) throw new Error("Este celular já está cadastrado.");
+      const celularLimpo = celular.replace(/\D/g, "");
+      const response = await fetch(
+        `http://localhost:81/api/clientes/verificar-celular?celular=${celularLimpo}`,
+      );
+      // Verifica se a requisição HTTP foi bem-sucedida
+      if (!response.ok) {
+        throw new Error("Erro na comunicação com o servidor.");
+      }
+
+      const data = await response.json();
+
+      if (data.exists) {
+        // Aqui você trata o caso de e-mail já cadastrado
+        throw new Error("Este celular já está cadastrado.");
+      }
 
       await new Promise((resolve) => setTimeout(resolve, 800));
 
@@ -193,7 +207,7 @@ function RegisterStep1({ dados, atualizarDados, onNext, onBack }: any) {
     if (valor.length > 8) valor = valor.replace(/(\d{5})(\d)/, "$1-$2");
 
     atualizarDados({ celular: valor });
-    
+
     // Limpa erros e status quando o usuário volta a digitar
     setCelularErro("");
     setCelularDisponivel(false);
@@ -280,16 +294,32 @@ function RegisterStep1({ dados, atualizarDados, onNext, onBack }: any) {
                 celularErro
                   ? "border-red-500"
                   : celularDisponivel
-                  ? "border-[#22c55e] focus:border-[#22c55e]"
-                  : "border-[#2a2a2a] focus:border-[#4a4a4a]"
+                    ? "border-[#22c55e] focus:border-[#22c55e]"
+                    : "border-[#2a2a2a] focus:border-[#4a4a4a]"
               }`}
             />
             {/* Feedback Loading Celular */}
             {validandoCelular && (
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <svg className="animate-spin w-5 h-5 text-[#3b82f6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin w-5 h-5 text-[#3b82f6]"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
               </div>
             )}
@@ -344,15 +374,23 @@ function RegisterStep2({ dados, atualizarDados, onNext, onBack }: any) {
 
     try {
       // AQUÍ ENTRA O SEU CÓDIGO REAL DA API (exemplo):
-      // const response = await fetch(`http://localhost:81/api/clientes/verificar-email?email=${email}`);
-      // if (!response.ok) throw new Error("Este e-mail já está cadastrado.");
+      const response = await fetch(
+        `http://localhost:81/api/clientes/verificar-email?email=${encodeURIComponent(email)}`,
+      );
 
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Verifica se a requisição HTTP foi bem-sucedida
+      if (!response.ok) {
+        throw new Error("Erro na comunicação com o servidor.");
+      }
 
-      // Regra para testes (Remova depois)
-      if (email === "teste@teste.com") {
+      const data = await response.json();
+
+      if (data.exists) {
+        // Aqui você trata o caso de e-mail já cadastrado
         throw new Error("Este e-mail já está cadastrado.");
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       setEmailDisponivel(true);
     } catch (error: any) {
@@ -426,16 +464,32 @@ function RegisterStep2({ dados, atualizarDados, onNext, onBack }: any) {
                 emailErro
                   ? "border-red-500"
                   : emailDisponivel
-                  ? "border-[#22c55e] focus:border-[#22c55e]"
-                  : "border-[#2a2a2a] focus:border-[#4a4a4a]"
+                    ? "border-[#22c55e] focus:border-[#22c55e]"
+                    : "border-[#2a2a2a] focus:border-[#4a4a4a]"
               }`}
             />
             {/* Feedback Loading Email */}
             {validandoEmail && (
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <svg className="animate-spin w-5 h-5 text-[#3b82f6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin w-5 h-5 text-[#3b82f6]"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
               </div>
             )}
@@ -479,7 +533,9 @@ function RegisterStep2({ dados, atualizarDados, onNext, onBack }: any) {
               value={confirmarSenha}
               onChange={(e) => setConfirmarSenha(e.target.value)}
               className={`w-full bg-[#1c1c1c] text-white p-3.5 rounded-2xl outline-none transition-colors placeholder-[#6b7280] text-[15px] border ${
-                erro ? "border-red-500" : "border-[#2a2a2a] focus:border-[#4a4a4a]"
+                erro
+                  ? "border-red-500"
+                  : "border-[#2a2a2a] focus:border-[#4a4a4a]"
               }`}
             />
           </div>

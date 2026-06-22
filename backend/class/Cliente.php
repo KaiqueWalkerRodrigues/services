@@ -248,7 +248,7 @@ class Cliente
         }
     }
 
-    public function consultarEmail($email)
+    public function verificarEmail($email)
     {
         try {
             $sql = "SELECT id_cliente 
@@ -257,6 +257,24 @@ class Cliente
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindParam(':email', $email);
+            $stmt->execute();
+            $dados = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return (bool) $dados;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function verificarCelular($celular)
+    {
+        try {
+            $sql = "SELECT id_cliente 
+                    FROM clientes 
+                    WHERE celular = :celular AND deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':celular', $celular);
             $stmt->execute();
             $dados = $stmt->fetch(PDO::FETCH_ASSOC);
 

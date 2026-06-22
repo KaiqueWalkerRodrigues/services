@@ -1,6 +1,4 @@
 <?php
-require("api/api.php");
-
 // CORS headers (allow the requesting origin and required headers)
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
 if ($origin && $origin !== '') {
@@ -19,6 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
+
+require("api/api.php");
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 $apiSubpath = $_SERVER['API_SUBPATH'] ?? '';
@@ -42,22 +42,38 @@ switch ($metodo) {
             break;
         }
 
-        if ($apiSubpath === 'consultar-email') {
+        if ($apiSubpath === 'verificar-email') {
             if (!isset($_GET['email'])) {
                 http_response_code(400);
                 echo json_encode(["mensagem" => "Parâmetro email é obrigatório"]);
                 break;
             }
-            echo json_encode(['exists' => $cliente->consultarEmail($_GET['email'])]);
+            echo json_encode(['exists' => $cliente->verificarEmail($_GET['email'])]);
             break;
         }
 
-        if ($loginValido) {
-            echo json_encode($cliente->listar());
-        } else {
-            http_response_code(401);
-            echo json_encode(["mensagem" => "Não autorizado"]);
+        if ($apiSubpath === 'verificar-celular') {
+            if (!isset($_GET['celular'])) {
+                http_response_code(400);
+                echo json_encode(["mensagem" => "Parâmetro celular é obrigatório"]);
+                break;
+            }
+            echo json_encode(['exists' => $cliente->verificarCelular($_GET['celular'])]);
+            break;
         }
+
+        if ($_GET == null) {
+            if ($loginValido) {
+                echo json_encode($cliente->listar());
+            } else {
+                http_response_code(401);
+                echo json_encode(["mensagem" => "Não autorizado"]);
+            }
+            break;
+        }
+
+        http_response_code(405);
+        echo json_encode(["mensagem" => "Método não permitido"]);
         break;
 
     case 'POST':
