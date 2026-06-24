@@ -151,7 +151,7 @@ class Colaborador
         }
     }
 
-    public function login($login, $senha, $origem, $ip_address = null)
+    public function login($login, $senha, $id_empresa, $origem, $ip_address = null)
     {
         try {
             // 1. Busca colaborador (is_sa agora está na tabela colaboradores)
@@ -196,11 +196,12 @@ class Colaborador
                 ]);
 
                 // 5. Insere o token na tabela acessos_tokens (Validade de 30 dias)
-                $sqlToken = "INSERT INTO acessos_tokens (id_colaborador, refresh_token, origem, ip_address, expires_at, created_at) 
-                             VALUES (:id_colaborador, :refresh_token, :origem, :ip_address, DATE_ADD(NOW(), INTERVAL 30 DAY), NOW())";
+                $sqlToken = "INSERT INTO acessos_tokens (id_colaborador, id_empresa, refresh_token, origem, ip_address, expires_at, created_at) 
+                             VALUES (:id_colaborador, :id_empresa, :refresh_token, :origem, :ip_address, DATE_ADD(NOW(), INTERVAL 30 DAY), NOW())";
 
                 $stmtToken = $this->pdo->prepare($sqlToken);
                 $stmtToken->bindParam(':id_colaborador', $usuario['id_colaborador']);
+                $stmtToken->bindParam(':id_empresa', $id_empresa);
                 $stmtToken->bindParam(':refresh_token', $refreshToken);
                 $stmtToken->bindParam(':origem', $origem);
                 $stmtToken->bindParam(':ip_address', $ip_address);
