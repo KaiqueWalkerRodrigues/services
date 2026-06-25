@@ -37,7 +37,7 @@ CREATE TABLE `acessos_tokens` (
   KEY `fk_tokens_clientes_idx` (`id_cliente`),
   CONSTRAINT `fk_tokens_clientes` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE,
   CONSTRAINT `fk_tokens_colaboradores` FOREIGN KEY (`id_colaborador`) REFERENCES `colaboradores` (`id_colaborador`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=59 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -46,7 +46,7 @@ CREATE TABLE `acessos_tokens` (
 
 LOCK TABLES `acessos_tokens` WRITE;
 /*!40000 ALTER TABLE `acessos_tokens` DISABLE KEYS */;
-INSERT INTO `acessos_tokens` VALUES (58,1,NULL,'fa1befaea41d2d0942b3895730e6c1a915c49ee188beb25f8a5e92757a5e4c14','web','172.18.0.1','2026-07-21 22:34:58','2026-06-21 22:34:58');
+INSERT INTO `acessos_tokens` VALUES (63,1,NULL,'b29fa538b821cb56fb167cd5ca3420fda3eac883d3d7909bf172fe0ad3bead52','web','172.18.0.1','2026-07-22 22:11:19','2026-06-22 22:11:19'),(64,NULL,1,'e2dbd1bf5893da1dcc4ec3544981cd81a7460db30d941f2c31be7c0fbfc9a00c','web','172.18.0.1','2026-07-22 22:31:28','2026-06-22 22:31:28');
 /*!40000 ALTER TABLE `acessos_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -148,7 +148,7 @@ CREATE TABLE `clientes` (
 
 LOCK TABLES `clientes` WRITE;
 /*!40000 ALTER TABLE `clientes` DISABLE KEYS */;
-INSERT INTO `clientes` VALUES (1,'Teste cliente','test@gmail.com','$2y$10$9SoVefrW6WglQZb82LIe2eJ9nqgFdWYtRJZAaerMtnC3PC24yfSru',NULL,'2026-06-21 16:56:26','2026-06-21 16:56:26',NULL);
+INSERT INTO `clientes` VALUES (1,'Kaique Souza','test@gmail.com','$2y$10$x7CqHAAIl1u5BbM1rl2RHufAZF1IqKrvuihcqbjfXeOOMIM7MWVse','1111111111','2026-06-22 22:53:58','2026-06-22 22:53:58',NULL);
 /*!40000 ALTER TABLE `clientes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -216,8 +216,38 @@ CREATE TABLE `colaboradores` (
 
 LOCK TABLES `colaboradores` WRITE;
 /*!40000 ALTER TABLE `colaboradores` DISABLE KEYS */;
-INSERT INTO `colaboradores` VALUES (1,1,1,'Kaique Rodrigues','kaique.souza','$2y$10$w8OON8oIOLzvivVauiJQzuJ4OiBRYkCuOh7XPbBapjMOUFycQI22K',0,'2026-06-16 22:15:14','2026-06-16 22:15:14',NULL);
+INSERT INTO `colaboradores` VALUES (1,1,1,'Kaique Rodrigues','kaique.souza','$2y$10$w8OON8oIOLzvivVauiJQzuJ4OiBRYkCuOh7XPbBapjMOUFycQI22K',1,'2026-06-16 22:15:14','2026-06-16 22:15:14',NULL);
 /*!40000 ALTER TABLE `colaboradores` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `colaboradores_empresas`
+--
+
+DROP TABLE IF EXISTS `colaboradores_empresas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `colaboradores_empresas` (
+  `id_colaborador_empresa` int NOT NULL AUTO_INCREMENT,
+  `id_colaborador` int NOT NULL,
+  `id_empresa` int NOT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_colaborador_empresa`),
+  KEY `fk_colaboradores_empresas_colaborador` (`id_colaborador`),
+  KEY `fk_colaboradores_empresas_empresa` (`id_empresa`),
+  CONSTRAINT `fk_colaboradores_empresas_colaborador` FOREIGN KEY (`id_colaborador`) REFERENCES `colaboradores` (`id_colaborador`) ON DELETE CASCADE,
+  CONSTRAINT `fk_colaboradores_empresas_empresa` FOREIGN KEY (`id_empresa`) REFERENCES `empresas` (`id_empresa`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `colaboradores_empresas`
+--
+
+LOCK TABLES `colaboradores_empresas` WRITE;
+/*!40000 ALTER TABLE `colaboradores_empresas` DISABLE KEYS */;
+/*!40000 ALTER TABLE `colaboradores_empresas` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -231,13 +261,16 @@ CREATE TABLE `colaboradores_grupos` (
   `id_colaborador_grupo` int NOT NULL AUTO_INCREMENT,
   `id_colaborador` int NOT NULL,
   `id_grupo` int NOT NULL,
+  `id_empresa` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id_colaborador_grupo`),
   KEY `id_colaborador` (`id_colaborador`),
   KEY `id_grupo` (`id_grupo`),
+  KEY `fk_colaboradores_grupos_empresas_idx` (`id_empresa`),
   CONSTRAINT `colaboradores_grupos_ibfk_1` FOREIGN KEY (`id_colaborador`) REFERENCES `colaboradores` (`id_colaborador`) ON DELETE CASCADE,
-  CONSTRAINT `colaboradores_grupos_ibfk_2` FOREIGN KEY (`id_grupo`) REFERENCES `grupos` (`id_grupo`) ON DELETE CASCADE
+  CONSTRAINT `colaboradores_grupos_ibfk_2` FOREIGN KEY (`id_grupo`) REFERENCES `grupos` (`id_grupo`) ON DELETE CASCADE,
+  CONSTRAINT `fk_colaboradores_grupos_empresas` FOREIGN KEY (`id_empresa`) REFERENCES `empresas` (`id_empresa`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -247,7 +280,7 @@ CREATE TABLE `colaboradores_grupos` (
 
 LOCK TABLES `colaboradores_grupos` WRITE;
 /*!40000 ALTER TABLE `colaboradores_grupos` DISABLE KEYS */;
-INSERT INTO `colaboradores_grupos` VALUES (1,1,1,'2026-06-21 21:06:51',NULL);
+INSERT INTO `colaboradores_grupos` VALUES (1,1,1,1,'2026-06-21 21:06:51',NULL);
 /*!40000 ALTER TABLE `colaboradores_grupos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -275,7 +308,7 @@ CREATE TABLE `empresas` (
 
 LOCK TABLES `empresas` WRITE;
 /*!40000 ALTER TABLE `empresas` DISABLE KEYS */;
-INSERT INTO `empresas` VALUES (1,'1','Teste empresa','2026-06-21 21:07:38','2026-06-21 21:25:39',NULL);
+INSERT INTO `empresas` VALUES (1,'1','Teste empresa','2026-06-21 21:07:38','2026-06-21 22:37:45',NULL);
 /*!40000 ALTER TABLE `empresas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -548,36 +581,6 @@ LOCK TABLES `servicos` WRITE;
 /*!40000 ALTER TABLE `servicos` DISABLE KEYS */;
 /*!40000 ALTER TABLE `servicos` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `vinculacoes`
---
-
-DROP TABLE IF EXISTS `vinculacoes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `vinculacoes` (
-  `id_vinculacao` int NOT NULL AUTO_INCREMENT,
-  `id_colaborador` int NOT NULL,
-  `id_empresa` int NOT NULL,
-  `deleted_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_vinculacao`),
-  KEY `fk_vinculacoes_colaborador` (`id_colaborador`),
-  KEY `fk_vinculacoes_empresa` (`id_empresa`),
-  CONSTRAINT `fk_vinculacoes_colaborador` FOREIGN KEY (`id_colaborador`) REFERENCES `colaboradores` (`id_colaborador`) ON DELETE CASCADE,
-  CONSTRAINT `fk_vinculacoes_empresa` FOREIGN KEY (`id_empresa`) REFERENCES `empresas` (`id_empresa`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `vinculacoes`
---
-
-LOCK TABLES `vinculacoes` WRITE;
-/*!40000 ALTER TABLE `vinculacoes` DISABLE KEYS */;
-/*!40000 ALTER TABLE `vinculacoes` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -588,4 +591,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-21 19:35:28
+-- Dump completed on 2026-06-23 20:33:04

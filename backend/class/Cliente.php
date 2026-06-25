@@ -145,7 +145,7 @@ class Cliente
         }
     }
 
-    public function login($email, $senha, $origem, $ip_address = null)
+    public function login($email, $senha, $origem, $id_empresa = null, $ip_address = null)
     {
         try {
             $sql = "SELECT id_cliente, nome, email, senha, celular 
@@ -170,11 +170,12 @@ class Cliente
                 ]);
 
                 // Inserindo na tabela vinculando ao id_cliente
-                $sqlToken = "INSERT INTO acessos_tokens (id_cliente, refresh_token, origem, ip_address, expires_at, created_at) 
-                             VALUES (:id_cliente, :refresh_token, :origem, :ip_address, DATE_ADD(NOW(), INTERVAL 30 DAY), NOW())";
+                $sqlToken = "INSERT INTO acessos_tokens (id_cliente, id_empresa, refresh_token, origem, ip_address, expires_at, created_at) 
+                             VALUES (:id_cliente, :id_empresa, :refresh_token, :origem, :ip_address, DATE_ADD(NOW(), INTERVAL 30 DAY), NOW())";
 
                 $stmtToken = $this->pdo->prepare($sqlToken);
                 $stmtToken->bindParam(':id_cliente', $usuario['id_cliente']);
+                $stmtToken->bindParam(':id_empresa', $id_empresa);
                 $stmtToken->bindParam(':refresh_token', $refreshToken);
                 $stmtToken->bindParam(':origem', $origem);
                 $stmtToken->bindParam(':ip_address', $ip_address);

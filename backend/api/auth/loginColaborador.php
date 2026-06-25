@@ -19,7 +19,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
     $ip_address = $_SERVER['REMOTE_ADDR'];
 
     $colaborador = new Colaborador();
-    $resultadoLogin = $colaborador->login($dados->login, $dados->senha, $origem, $ip_address);
+    $resultadoLogin = $colaborador->login($dados->login, $dados->senha, $dados->id_empresa, $origem, $ip_address);
 
     if ($resultadoLogin['status'] === 'sucesso') {
         $usuario = $resultadoLogin['dados_usuario'];
