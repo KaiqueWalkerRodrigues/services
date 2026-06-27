@@ -5,6 +5,7 @@ import LoginCliente from "./pages/login/clientes";
 import LoginColaborador from "./pages/login/colaboradores";
 import CadastrarCliente from "./pages/cadastro/CadastrarCliente";
 import { ToastProvider } from "./components/Toast";
+import PaginaAdministracao from "./pages/admin/adm";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/login" element={<LoginCliente />} />
         <Route path="/loginEmpresa" element={<LoginColaborador />} />
         <Route path="/registro" element={<CadastrarCliente />} />
+        <Route path="/adm" element={<PaginaAdministracao />} />
       </Routes>
     </BrowserRouter>
   );
