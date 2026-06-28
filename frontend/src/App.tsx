@@ -1,28 +1,76 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import Login from "./components/Login";
-import Home from "./pages/Home";
-import LoginCliente from "./pages/login/clientes";
-import LoginColaborador from "./pages/login/colaboradores";
-import CadastrarCliente from "./pages/cadastro/CadastrarCliente";
+import PageTitle from "./components/PageTitle";
 import { ToastProvider } from "./components/Toast";
-import PaginaAdministracao from "./pages/admin/adm";
+import { AuthProvider } from "./context/AuthProvider";
+import { ProtectedRouteColaborador } from "./components/ProtectedRouteColaborador";
+import { ProtectedRouteCliente } from "./components/ProtectedRouteCliente";
+
+import HomeCliente from "./pages/HomeCliente";
+import HomeColaborador from "./pages/HomeColaborador";
+import LoginCliente from "./pages/auth/loginCliente";
+import LoginColaborador from "./pages/auth/loginColaborador";
+import CadastrarCliente from "./pages/auth/cadastro/cadastrarCliente";
+import PaginaAdministracao from "./pages/admin/admin";
 
 export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider />
-      <Routes>
-        {/* <Route path="/login-cliente" element={<Login tipo="cliente" />} />
-        <Route
-          path="/login-colaborador"
-          element={<Login tipo="colaborador" />}
-        /> */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<LoginCliente />} />
-        <Route path="/loginEmpresa" element={<LoginColaborador />} />
-        <Route path="/registro" element={<CadastrarCliente />} />
-        <Route path="/adm" element={<PaginaAdministracao />} />
-      </Routes>
+      {/* AuthProvider envolve tudo para que loginColaborador acesse o contexto */}
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginCliente />} />
+          <Route
+            path="/loginColaborador"
+            element={
+              <PageTitle title="Services | Login Colaborador">
+                <LoginColaborador />
+              </PageTitle>
+            }
+          />
+          <Route
+            path="/registro"
+            element={
+              <PageTitle title="Services | Cadastrar-se">
+                <CadastrarCliente />
+              </PageTitle>
+            }
+          />
+
+          {/* Rotas protegidas Colaborador */}
+          <Route
+            path="/home"
+            element={
+              <ProtectedRouteColaborador>
+                <PageTitle title="Services | Home Admin">
+                  <HomeColaborador />
+                </PageTitle>
+              </ProtectedRouteColaborador>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRouteColaborador>
+                <PageTitle title="Services | Admin">
+                  <PaginaAdministracao />
+                </PageTitle>
+              </ProtectedRouteColaborador>
+            }
+          />
+          {/* Rotas protegidas cliente */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRouteCliente>
+                <PageTitle title="Services | Home Cliente">
+                  <HomeCliente />
+                </PageTitle>
+              </ProtectedRouteCliente>
+            }
+          />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

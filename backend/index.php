@@ -98,6 +98,11 @@ $rotas = [
         'login' => false,
         'permissoes' => null
     ],
+    'api/auth/me' => [
+        'file' => 'auth/me.php',
+        'login' => false,
+        'permissoes' => null
+    ],
     'api/auth/refresh' => [
         'file' => 'auth/refresh.php',
         'login' => false,

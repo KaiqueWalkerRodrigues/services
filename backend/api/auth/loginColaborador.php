@@ -1,8 +1,8 @@
 <?php
 require("api/api.php");
 
-// Headers CORS...
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: http://localhost");
+header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
@@ -24,24 +24,18 @@ if (!empty($dados->login) && !empty($dados->senha)) {
     if ($resultadoLogin['status'] === 'sucesso') {
         $usuario = $resultadoLogin['dados_usuario'];
 
-        // --- BUSCA DE DADOS DE RBAC (Múltiplos Grupos) ---
-        // 1. Busca todos os grupos vinculados ao colaborador
         $grupos = $colaborador->obterGruposColaborador($usuario['id_colaborador']);
         $ids_grupos = array_column($grupos, 'id_grupo');
 
         $is_sa = $usuario['is_sa'];
 
-        // 3. Busca permissões agregadas de todos os grupos
-        // Se for Super Admin, ganha acesso total ['*']
         $permissoes = $is_sa ? ['*'] : $colaborador->obterPermissoesGrupos($ids_grupos);
 
-        // 4. Busca empresas de acesso
         $empresas_acesso = $colaborador->obterEmpresasAcesso($usuario['id_colaborador']);
 
-        // --- GERAÇÃO DO JWT ---
         $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
         $payloadArray = [
-            'sub' => (int)$usuario['id_colaborador'],
+            'id_colaborador' => (int)$usuario['id_colaborador'],
             'tipo' => 'colaborador',
             'is_sa' => (bool)$is_sa,
             'grupos' => $ids_grupos,
@@ -54,6 +48,13 @@ if (!empty($dados->login) && !empty($dados->senha)) {
         $secret = getenv('JWT_SECRET') ?: 'abc123';
         $signature = base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true));
         $token_jwt = "$header.$payload.$signature";
+
+        $path = null;
+        if ((bool)$is_sa == true) {
+            $path = "/admin";
+        } else {
+            $path = "/home";
+        }
 
         // --- COOKIES E RESPOSTA ---
         if ($origem === 'web') {
@@ -68,13 +69,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
             "refresh_token" => $resultadoLogin['refresh_token'],
             "usuario" => [
                 "id_colaborador" => (int)$usuario['id_colaborador'],
-                "login" => $usuario['login']
-            ],
-            "rbac" => [
-                "is_sa" => (bool)$is_sa,
-                "grupos" => $grupos,
-                "permissoes" => $permissoes,
-                "empresas_acesso" => $empresas_acesso
+                "path" => $path,
             ]
         ]);
     } else {

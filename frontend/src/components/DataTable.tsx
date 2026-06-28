@@ -1,9 +1,15 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
-import { Button } from "./Button"; 
+import { Button } from "./Button";
 
 export interface ColumnDef<T> {
   header: string;
@@ -18,14 +24,17 @@ interface DataTableProps<T> {
 }
 
 // ─── Componente Principal ───────────────────────────────────────────────────
-export function DataTable<T extends Record<string, any>>({ 
-  columns, 
-  data, 
-  itemsPerPage = 5 
+export function DataTable<T extends Record<string, any>>({
+  columns,
+  data,
+  itemsPerPage = 5,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState<{ key: keyof T; direction: "asc" | "desc" } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof T;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   // 1. Filtragem (Search)
   const filteredData = useMemo(() => {
@@ -33,8 +42,11 @@ export function DataTable<T extends Record<string, any>>({
     const lowerSearch = search.toLowerCase();
     return data.filter((item) =>
       Object.values(item).some(
-        (val) => val !== null && val !== undefined && String(val).toLowerCase().includes(lowerSearch)
-      )
+        (val) =>
+          val !== null &&
+          val !== undefined &&
+          String(val).toLowerCase().includes(lowerSearch),
+      ),
     );
   }, [data, search]);
 
@@ -63,7 +75,11 @@ export function DataTable<T extends Record<string, any>>({
   // Handler de Ordenação
   const handleSort = (key: keyof T) => {
     let direction: "asc" | "desc" = "asc";
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "asc"
+    ) {
       direction = "desc";
     }
     setSortConfig({ key, direction });
@@ -77,10 +93,11 @@ export function DataTable<T extends Record<string, any>>({
 
   return (
     <div className="w-full bg-[#141414] border border-[#2a2a2a] rounded-2xl shadow-2xl overflow-hidden flex flex-col font-sans">
-      
       {/* Topo: Barra de Pesquisa */}
       <div className="p-5 border-b border-[#2a2a2a] flex items-center justify-between bg-[#1a1a1a]">
-        <h2 className="text-lg font-semibold text-white tracking-tight">Registos</h2>
+        <h2 className="text-lg font-semibold text-white tracking-tight">
+          Registos
+        </h2>
         <div className="relative w-64">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search size={16} className="text-[#6b7280]" />
@@ -101,16 +118,27 @@ export function DataTable<T extends Record<string, any>>({
           <thead>
             <tr className="bg-[#111] border-b border-[#2a2a2a]">
               {columns.map((col, idx) => (
-                <th 
-                  key={idx} 
+                <th
+                  key={idx}
                   onClick={() => handleSort(col.accessorKey)}
                   className="px-6 py-4 text-xs font-bold text-[#9ca3af] uppercase tracking-wider cursor-pointer hover:text-white transition-colors select-none group"
                 >
                   <div className="flex items-center gap-2 w-max">
                     {col.header}
                     <span className="flex flex-col text-[#444] group-hover:text-[#666] transition-colors">
-                      <ChevronUp size={12} className={sortConfig?.key === col.accessorKey && sortConfig.direction === 'asc' ? 'text-[#3b82f6]' : ''} />
-                      <ChevronDown size={12} className={`-mt-1 ${sortConfig?.key === col.accessorKey && sortConfig.direction === 'desc' ? 'text-[#3b82f6]' : ''}`} />
+                      <ChevronUp
+                        size={12}
+                        className={
+                          sortConfig?.key === col.accessorKey &&
+                          sortConfig.direction === "asc"
+                            ? "text-[#3b82f6]"
+                            : ""
+                        }
+                      />
+                      <ChevronDown
+                        size={12}
+                        className={`-mt-1 ${sortConfig?.key === col.accessorKey && sortConfig.direction === "desc" ? "text-[#3b82f6]" : ""}`}
+                      />
                     </span>
                   </div>
                 </th>
@@ -120,13 +148,13 @@ export function DataTable<T extends Record<string, any>>({
           <tbody>
             {paginatedData.length > 0 ? (
               paginatedData.map((row, rowIndex) => (
-                <tr 
-                  key={rowIndex} 
+                <tr
+                  key={rowIndex}
                   className="border-b border-[#2a2a2a] last:border-0 hover:bg-[#1c1c1c]/50 transition-colors"
                 >
                   {columns.map((col, colIndex) => (
-                    <td 
-                      key={colIndex} 
+                    <td
+                      key={colIndex}
                       className="px-6 py-4 text-sm text-[#e5e7eb] whitespace-nowrap"
                     >
                       {/* Renderiza a célula customizada se existir, senão mostra o dado puro */}
@@ -137,7 +165,10 @@ export function DataTable<T extends Record<string, any>>({
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="px-6 py-12 text-center text-[#6b7280]">
+                <td
+                  colSpan={columns.length}
+                  className="px-6 py-12 text-center text-[#6b7280]"
+                >
                   <p className="text-sm">Nenhum registo encontrado.</p>
                 </td>
               </tr>
@@ -149,13 +180,27 @@ export function DataTable<T extends Record<string, any>>({
       {/* Rodapé: Paginação */}
       <div className="p-4 border-t border-[#2a2a2a] flex items-center justify-between bg-[#1a1a1a]">
         <p className="text-xs text-[#6b7280]">
-          Mostrando <span className="font-medium text-[#e5e7eb]">{paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> a <span className="font-medium text-[#e5e7eb]">{Math.min(currentPage * itemsPerPage, filteredData.length)}</span> de <span className="font-medium text-[#e5e7eb]">{filteredData.length}</span> resultados
+          Mostrando{" "}
+          <span className="font-medium text-[#e5e7eb]">
+            {paginatedData.length > 0
+              ? (currentPage - 1) * itemsPerPage + 1
+              : 0}
+          </span>{" "}
+          a{" "}
+          <span className="font-medium text-[#e5e7eb]">
+            {Math.min(currentPage * itemsPerPage, filteredData.length)}
+          </span>{" "}
+          de{" "}
+          <span className="font-medium text-[#e5e7eb]">
+            {filteredData.length}
+          </span>{" "}
+          resultados
         </p>
         <div className="flex items-center gap-3">
           <Button
             size="sm"
             color="secondary"
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
             className="px-2"
           >
@@ -167,7 +212,9 @@ export function DataTable<T extends Record<string, any>>({
           <Button
             size="sm"
             color="secondary"
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
             disabled={currentPage === totalPages}
             className="px-2"
           >
@@ -175,7 +222,6 @@ export function DataTable<T extends Record<string, any>>({
           </Button>
         </div>
       </div>
-
     </div>
   );
 }

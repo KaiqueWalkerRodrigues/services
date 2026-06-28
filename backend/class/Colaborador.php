@@ -15,29 +15,37 @@ class Colaborador
         }
     }
 
-    public function cadastrar($id_empresa, $id_grupo, $nome, $login, $senha)
+    public function cadastrar($id_empresa, $nome, $login, $senha)
     {
         try {
-            $sql = "INSERT INTO colaboradores (id_empresa, id_grupo, nome, login, senha, created_at, updated_at) 
-                    VALUES (:id_empresa, :id_grupo, :nome, :login, :senha, NOW(), NOW())";
+            $sql = "INSERT INTO colaboradores (nome, login, senha, created_at, updated_at) 
+                    VALUES (:nome, :login, :senha, NOW(), NOW())";
 
             $stmt = $this->pdo->prepare($sql);
 
-            // Hash seguro para a senha
             $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
 
-            $stmt->bindParam(':id_empresa', $id_empresa);
-            $stmt->bindParam(':id_grupo', $id_grupo);
             $stmt->bindParam(':nome', $nome);
             $stmt->bindParam(':login', $login);
             $stmt->bindParam(':senha', $senhaHash);
 
             $stmt->execute();
 
+            $id_colaborador = $this->pdo->lastInsertId();
+
+            $sql = "INSERT INTO colaboradores_empresas (id_empresa, id_colaborador, created_at) VALUES (:id_empresa, :id_colaborador, NOW());";
+
+            $stmt = $this->pdo->prepare($sql);
+
+            $stmt->bindParam(':id_empresa', $id_empresa);
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+
+            $stmt->execute();
+
             return [
                 'status' => 'sucesso',
                 'mensagem' => 'Colaborador cadastrado com sucesso!',
-                'id' => $this->pdo->lastInsertId()
+                'id' => $id_colaborador
             ];
         } catch (PDOException $e) {
             http_response_code(500);
@@ -48,23 +56,21 @@ class Colaborador
         }
     }
 
-    public function editar($id_colaborador, $id_empresa, $id_grupo, $nome, $login, $senha = null)
+    public function editar($id_colaborador, $nome, $login, $senha = null)
     {
         try {
             if ($senha) {
                 $sql = "UPDATE colaboradores 
-                        SET id_empresa = :id_empresa, id_grupo = :id_grupo, nome = :nome, login = :login, senha = :senha, updated_at = NOW() 
+                        SET nome = :nome, login = :login, senha = :senha, updated_at = NOW() 
                         WHERE id_colaborador = :id_colaborador AND deleted_at IS NULL";
             } else {
                 $sql = "UPDATE colaboradores 
-                        SET id_empresa = :id_empresa, id_grupo = :id_grupo, nome = :nome, login = :login, updated_at = NOW() 
+                        SET nome = :nome, login = :login, updated_at = NOW() 
                         WHERE id_colaborador = :id_colaborador AND deleted_at IS NULL";
             }
 
             $stmt = $this->pdo->prepare($sql);
 
-            $stmt->bindParam(':id_empresa', $id_empresa);
-            $stmt->bindParam(':id_grupo', $id_grupo);
             $stmt->bindParam(':nome', $nome);
             $stmt->bindParam(':login', $login);
             $stmt->bindParam(':id_colaborador', $id_colaborador);
@@ -90,7 +96,6 @@ class Colaborador
     public function deletar($id_colaborador)
     {
         try {
-            // Soft Delete
             $sql = "UPDATE colaboradores SET deleted_at = NOW() WHERE id_colaborador = :id_colaborador AND deleted_at IS NULL";
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindParam(':id_colaborador', $id_colaborador);
@@ -110,7 +115,7 @@ class Colaborador
     public function listar()
     {
         try {
-            $sql = "SELECT id_colaborador, id_empresa, id_grupo, nome, login, created_at, updated_at 
+            $sql = "SELECT id_colaborador, nome, login, created_at, updated_at 
                     FROM colaboradores WHERE deleted_at IS NULL";
 
             $stmt = $this->pdo->prepare($sql);
@@ -131,7 +136,7 @@ class Colaborador
     public function mostrar($id_colaborador)
     {
         try {
-            $sql = "SELECT id_colaborador, id_empresa, id_grupo, nome, login, created_at, updated_at 
+            $sql = "SELECT id_colaborador, nome, login, created_at, updated_at 
                     FROM colaboradores 
                     WHERE id_colaborador = :id_colaborador AND deleted_at IS NULL";
 
@@ -155,11 +160,21 @@ class Colaborador
     {
         try {
             // 1. Busca colaborador (is_sa agora está na tabela colaboradores)
-            $sql = "SELECT id_colaborador, id_empresa, login, senha, is_sa 
-                    FROM colaboradores 
-                    WHERE login = :login AND deleted_at IS NULL LIMIT 1";
+            $sql = "SELECT 
+                        c.id_colaborador, 
+                        c.login, 
+                        c.senha, 
+                        c.is_sa 
+                    FROM colaboradores AS c
+                    INNER JOIN colaboradores_empresas AS ce 
+                        ON c.id_colaborador = ce.id_colaborador
+                    WHERE c.login = :login 
+                    AND ce.id_empresa = :id_empresa
+                    AND c.deleted_at IS NULL 
+                    LIMIT 1;";
 
             $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_empresa', $id_empresa);
             $stmt->bindParam(':login', $login);
             $stmt->execute();
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);

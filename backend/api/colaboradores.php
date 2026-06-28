@@ -36,12 +36,12 @@ switch ($metodo) {
 
     case 'POST':
         $data = json_decode(file_get_contents("php://input"));
-        echo json_encode($colaborador->cadastrar($data->id_empresa, $data->id_grupo, $data->nome, $data->login, $data->senha));
+        echo json_encode($colaborador->cadastrar($data->id_empresa, $data->nome, $data->login, $data->senha));
         break;
 
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
-        echo json_encode($colaborador->editar($data->id_colaborador, $data->id_empresa, $data->id_grupo, $data->nome, $data->login, $data->senha ?? null));
+        echo json_encode($colaborador->editar($data->id_colaborador, $data->nome, $data->login, $data->senha ?? null));
         break;
 
     case 'DELETE':

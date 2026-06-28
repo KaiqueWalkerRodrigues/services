@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { realizarLoginCliente } from "../../services/auth";
+import { realizarLoginCliente } from "../../api/auth";
 
 // ─── Theme tokens ────────────────────────────────────────────────────────────
 // To swap themes, change THEME below to "dark" or "light".
@@ -165,14 +165,16 @@ export default function LoginCliente() {
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    const toastId = toast.loading('Verificando credenciais...');
+    const toastId = toast.loading("Verificando credenciais...");
 
     try {
       const dados = await realizarLoginCliente(email, senha);
-      toast.success(dados.mensagem || 'Login efetuado com sucesso!', { id: toastId });
-      
+      toast.success(dados.mensagem || "Login efetuado com sucesso!", {
+        id: toastId,
+      });
+
       // setTimeout(() => {
-      //   window.location.href = '/dashboard'; 
+      //   window.location.href = '/dashboard';
       // }, 1500);
     } catch (error: any) {
       toast.error(error.message, { id: toastId });
@@ -213,10 +215,7 @@ export default function LoginCliente() {
         >
           Sistema de Serviço
         </p>
-        <div
-          className="mt-2 h-px w-16"
-          style={{ background: t.topAccent }}
-        />
+        <div className="mt-2 h-px w-16" style={{ background: t.topAccent }} />
       </div>
 
       {/* Card */}
@@ -236,7 +235,10 @@ export default function LoginCliente() {
         />
 
         {/* Header */}
-        <div className="mb-7 text-center flex flex-col items-center" style={{ animation: "fadeUp 0.6s 0.12s both" }}>
+        <div
+          className="mb-7 text-center flex flex-col items-center"
+          style={{ animation: "fadeUp 0.6s 0.12s both" }}
+        >
           <h1
             className="text-3xl font-semibold tracking-tight"
             style={{ color: t.title, letterSpacing: "-0.02em" }}
@@ -248,10 +250,7 @@ export default function LoginCliente() {
           </p>
         </div>
 
-        <form
-          onSubmit={handleLogin}
-          className="space-y-4"
-        >
+        <form onSubmit={handleLogin} className="space-y-4">
           {/* Email */}
           <div style={{ animation: "fadeUp 0.6s 0.18s both" }}>
             <label
