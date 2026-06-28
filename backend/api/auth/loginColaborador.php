@@ -41,7 +41,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
             'grupos' => $ids_grupos,
             'permissoes' => $permissoes,
             'empresas_acesso' => $empresas_acesso,
-            'exp' => time() + (10 * 60)
+            'exp' => time() + (5 * 60)
         ];
 
         $payload = base64_encode(json_encode($payloadArray));
@@ -58,7 +58,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
 
         // --- COOKIES E RESPOSTA ---
         if ($origem === 'web') {
-            setcookie("access_token", $token_jwt, ['expires' => time() + (10 * 60), 'path' => '/', 'httponly' => true, 'samesite' => 'Strict']);
+            setcookie("access_token", $token_jwt, ['expires' => time() + (5 * 60), 'path' => '/', 'httponly' => true, 'samesite' => 'Strict']);
             setcookie("refresh_token", $resultadoLogin['refresh_token'], ['expires' => time() + (30 * 24 * 60 * 60), 'path' => '/', 'httponly' => true, 'samesite' => 'Strict']);
         }
 
