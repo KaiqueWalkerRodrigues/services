@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { realizarLoginEmpresa } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config/api";
 
 export default function LoginColaborador() {
   const [codigo, setCodigo] = useState("");
@@ -19,21 +20,20 @@ export default function LoginColaborador() {
     try {
       const data = await realizarLoginEmpresa(codigo, usuario, senha);
 
-      auth?.login({
-        id_colaborador: data.usuario.id_colaborador,
-        nome: data.usuario.nome,
+      // Busca nome e dados completos do usuário
+      const meRes = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        credentials: "include",
       });
+      const meData = await meRes.json();
+
+      if (meData.sucesso) {
+        auth?.login(meData.dados); // { id_colaborador, nome }
+      }
 
       toast.success("Acesso liberado!", { id: toastId });
 
       setTimeout(() => {
-        if (data.usuario.path == "/admin") {
-          navigate("/admin");
-        } else if (data.usuario.path == "/home") {
-          navigate("/home");
-        } else {
-          navigate("/404");
-        }
+        navigate(data.usuario.path ?? "/404");
       }, 800);
     } catch (error: any) {
       toast.error(error.message || "Erro de conexão", { id: toastId });

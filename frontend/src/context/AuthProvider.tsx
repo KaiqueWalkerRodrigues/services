@@ -1,4 +1,5 @@
-import { useState, useEffect, type ReactNode } from "react";
+// AuthProvider.tsx
+import { useState, useEffect, useCallback, useRef } from "react";
 import { type Usuario } from "../types/auth";
 import { Outlet, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config/api";
@@ -8,61 +9,80 @@ export function AuthProvider() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [carregando, setCarregando] = useState<boolean>(true);
   const navigate = useNavigate();
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
 
-  useEffect(() => {
-    const verificarSessao = async () => {
-      try {
-        let response = await fetch(`${API_BASE_URL}/api/auth/me`, {
-          credentials: "include",
-        });
+  const deslogar = useCallback(() => {
+    setUsuario(null);
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
+    navigate("/loginColaborador");
+  }, [navigate]);
 
-        // Tentar renovar token se o primeiro falhar
-        if (response.status === 401) {
-          const refresh = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-            method: "POST",
-            credentials: "include",
-          });
-
-          if (!refresh.ok) {
-            setCarregando(false);
-            return;
-          }
-
-          response = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            credentials: "include",
-          });
-        }
-
-        if (!response.ok) {
-          setCarregando(false);
-          return;
-        }
-
-        const data = await response.json();
-        if (data.sucesso) {
-          setUsuario(data.dados);
-        }
-      } catch {
-        // Erro na conexão
-      } finally {
-        setCarregando(false);
-      }
-    };
-
-    verificarSessao();
+  const tentarRenovar = useCallback(async (): Promise<boolean> => {
+    const refresh = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+    return refresh.ok;
   }, []);
 
-  const login = (userData: Usuario) => {
-    setUsuario(userData);
-  };
+  const buscarUsuario = useCallback(async (): Promise<boolean> => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      credentials: "include",
+    });
 
-  const logout = () => {
-    setUsuario(null);
-    navigate("/loginColaborador");
-  };
+    if (response.status === 401) {
+      const renovado = await tentarRenovar();
+      if (!renovado) return false;
+
+      const retry = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        credentials: "include",
+      });
+      if (!retry.ok) return false;
+
+      const data = await retry.json();
+      if (data.sucesso) setUsuario(data.dados);
+      return true;
+    }
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    if (data.sucesso) setUsuario(data.dados);
+    return true;
+  }, [tentarRenovar]);
+
+  // Verificação inicial
+  useEffect(() => {
+    buscarUsuario().finally(() => setCarregando(false));
+  }, [buscarUsuario]);
+
+  // Renovação automática a cada 9 minutos enquanto estiver logado
+  useEffect(() => {
+    if (!usuario) return;
+
+    refreshIntervalRef.current = setInterval(
+      async () => {
+        const renovado = await tentarRenovar();
+        if (!renovado) deslogar();
+      },
+      9 * 60 * 1000,
+    );
+
+    return () => {
+      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
+    };
+  }, [usuario, tentarRenovar, deslogar]);
+
+  const login = useCallback((userData: Usuario) => {
+    setUsuario(userData);
+  }, []);
 
   if (carregando) {
-    // Você pode substituir por um componente de loading centralizado
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white">
         Carregando...
@@ -71,7 +91,9 @@ export function AuthProvider() {
   }
 
   return (
-    <AuthContext.Provider value={{ usuario, carregando, login, logout }}>
+    <AuthContext.Provider
+      value={{ usuario, carregando, login, logout: deslogar }}
+    >
       <Outlet />
     </AuthContext.Provider>
   );

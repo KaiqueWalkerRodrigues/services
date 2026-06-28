@@ -96,7 +96,7 @@ export function DataTable<T extends Record<string, any>>({
       {/* Topo: Barra de Pesquisa */}
       <div className="p-5 border-b border-[#2a2a2a] flex items-center justify-between bg-[#1a1a1a]">
         <h2 className="text-lg font-semibold text-white tracking-tight">
-          Registos
+          Registros
         </h2>
         <div className="relative w-64">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
