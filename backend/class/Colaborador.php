@@ -425,48 +425,29 @@ class Colaborador
     }
 
     /**
-     * Obtém o array de empresas às quais o colaborador tem acesso.
-     * Pode consultar:
-     * 1. Tabela 'vinculacoes' se o colaborador estiver vinculado a múltiplas empresas
-     * 2. Ou apenas 'id_empresa' da coluna colaboradores como fallback
-     * 
-     * Retorna array de IDs: [1, 2, 3, ...]
+     * Obtém o array de IDs das empresas às quais o colaborador tem acesso.
+     * Consulta a tabela de relacionamento colaboradores_empresas.
+     * * @param int $id_colaborador
+     * @return int[] Array de IDs das empresas
      */
     public function obterEmpresasAcesso($id_colaborador)
     {
         try {
-            // 1. Tenta buscar na tabela vinculacoes (permite múltiplas empresas)
-            $sqlVinculacoes = "SELECT DISTINCT id_empresa FROM vinculacoes 
-                               WHERE id_colaborador = :id_colaborador 
-                               AND deleted_at IS NULL";
+            // Buscamos diretamente na tabela de relacionamento
+            $sql = "SELECT DISTINCT id_empresa 
+                    FROM colaboradores_empresas 
+                    WHERE id_colaborador = :id_colaborador 
+                    AND deleted_at IS NULL";
 
-            $stmt = $this->pdo->prepare($sqlVinculacoes);
-            $stmt->bindParam(':id_colaborador', $id_colaborador);
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_colaborador', $id_colaborador, PDO::PARAM_INT);
             $stmt->execute();
 
+            // fetchAll(PDO::FETCH_COLUMN) retorna um array simples com os valores da coluna
             $empresas = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-            // Se houver vinculações explícitas, retorna
-            if (!empty($empresas)) {
-                return array_map('intval', $empresas);
-            }
-
-            // 2. Fallback: busca id_empresa diretamente da tabela colaboradores
-            $sqlFallback = "SELECT id_empresa FROM colaboradores 
-                            WHERE id_colaborador = :id_colaborador 
-                            AND deleted_at IS NULL";
-
-            $stmtFallback = $this->pdo->prepare($sqlFallback);
-            $stmtFallback->bindParam(':id_colaborador', $id_colaborador);
-            $stmtFallback->execute();
-
-            $resultado = $stmtFallback->fetch(PDO::FETCH_ASSOC);
-
-            if ($resultado && $resultado['id_empresa']) {
-                return [(int) $resultado['id_empresa']];
-            }
-
-            return [];
+            // Garantimos que todos os retornos sejam inteiros
+            return array_map('intval', $empresas);
         } catch (PDOException $e) {
             error_log('Erro ao obter empresas de acesso: ' . $e->getMessage());
             return [];

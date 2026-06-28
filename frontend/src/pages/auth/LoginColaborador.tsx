@@ -10,7 +10,7 @@ export default function LoginColaborador() {
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const auth = useAuth(); // Agora não quebra
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -19,9 +19,9 @@ export default function LoginColaborador() {
     try {
       const data = await realizarLoginEmpresa(codigo, usuario, senha);
 
-      login({
+      auth?.login({
         id_colaborador: data.usuario.id_colaborador,
-        nome: data.usuario.nome ?? "",
+        nome: data.usuario.nome,
       });
 
       toast.success("Acesso liberado!", { id: toastId });

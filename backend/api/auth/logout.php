@@ -26,12 +26,19 @@ if (!$dadosUsuario) {
 }
 
 // 3. Pega o refresh_token enviado no corpo da requisição (necessário para deletar do banco)
-$input = json_decode(file_get_contents("php://input"), true);
-$refreshToken = $input['refresh_token'] ?? null;
+$refreshToken = $_COOKIE['refresh_token'] ?? null;
+
+// Se não houver cookie, tente buscar do corpo (para garantir compatibilidade)
+if (!$refreshToken) {
+    $input = json_decode(file_get_contents("php://input"), true);
+    $refreshToken = $input['refresh_token'] ?? null;
+}
 
 if (!$refreshToken) {
+    // Opcional: Se quiser permitir logout mesmo sem refresh token, 
+    // apenas limpe os cookies e responda sucesso.
     http_response_code(400);
-    echo json_encode(["sucesso" => false, "mensagem" => "Refresh token não fornecido."]);
+    echo json_encode(["sucesso" => false, "mensagem" => "Token de atualização não encontrado."]);
     exit;
 }
 
@@ -47,10 +54,10 @@ if (!$tipo) {
 $sucesso = false;
 if ($tipo === 'colaborador') {
     $colaborador = new Colaborador();
-    $sucesso = $colaborador->logout($dadosUsuario['sub'], $refreshToken);
+    $sucesso = $colaborador->logout($dadosUsuario['id_colaborador'], $refreshToken);
 } elseif ($tipo === 'cliente') {
     $cliente = new Cliente();
-    $sucesso = $cliente->logout($dadosUsuario['sub'], $refreshToken);
+    $sucesso = $cliente->logout($dadosUsuario['id_colaborador'], $refreshToken);
 } else {
     http_response_code(400);
     echo json_encode(["sucesso" => false, "mensagem" => "Tipo de usuário inválido: {$tipo}"]);
