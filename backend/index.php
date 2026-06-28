@@ -33,40 +33,6 @@ function verificarPermissoes($permissoesRequeridas, $dadosUsuario)
 }
 
 /**
- * Retorna todos os headers da requisição.
- */
-function obterHeaders()
-{
-    if (function_exists('getallheaders')) {
-        return getallheaders();
-    }
-
-    $headers = [];
-    foreach ($_SERVER as $name => $value) {
-        if (str_starts_with($name, 'HTTP_')) {
-            $headerName = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
-            $headers[$headerName] = $value;
-        }
-    }
-    return $headers;
-}
-
-/**
- * Retorna o token Bearer ou o token do cookie.
- */
-function obterTokenJwt()
-{
-    $headers = obterHeaders();
-    $authorization = $headers['Authorization'] ?? $headers['authorization'] ?? null;
-
-    if ($authorization) {
-        return preg_replace('/^Bearer\s+/i', '', trim($authorization));
-    }
-
-    return $_COOKIE['access_token'] ?? null;
-}
-
-/**
  * Verifica se a rota exige autenticação para o método HTTP atual.
  */
 function rotaExigeLogin($loginConfig, $metodo)
@@ -191,17 +157,32 @@ $_SERVER['API_SUBPATH'] = $apiSubpath;
 
 // 4. Validação de Login
 $dadosUsuario = null;
+
 if (rotaExigeLogin($requiredLogin, $method)) {
     $token = AuthHelper::obterTokenJwt();
     $dadosUsuario = $token ? AuthHelper::validarToken($token) : false;
 
-    if (!$dadosUsuario) {
+    // Se o JWT é válido, fazemos a checagem extra de "sessão viva"
+    if ($dadosUsuario) {
+        $refreshToken = $_COOKIE['refresh_token'] ?? null;
+
+        // Verifica se a sessão ainda existe no banco (validarRefreshToken que criamos antes)
+        $sessaoValida = AuthHelper::validarRefreshToken($refreshToken);
+
+        if (!$sessaoValida) {
+            // Token de acesso é válido, mas o refresh_token foi derrubado/não existe
+            http_response_code(401);
+            echo json_encode(["status" => "erro", "mensagem" => "Sessão encerrada pelo servidor (401)."]);
+            exit;
+        }
+    } else {
+        // JWT inválido ou ausente
         http_response_code(401);
         echo json_encode(["status" => "erro", "mensagem" => "Não autorizado. Faça login (401)."]);
         exit;
     }
 } else {
-    // Mesmo que a rota não exija login, podemos tentar extrair os dados do token se existir
+    // Rota pública, mas tentamos ler dados se houver token
     $token = AuthHelper::obterTokenJwt();
     if ($token) {
         $dadosUsuario = AuthHelper::validarToken($token);

@@ -27,25 +27,35 @@ class AuthHelper
     }
 
     /**
-     * Valida a assinatura do token, mas ignora a data de expiração.
-     * Útil para recuperar o ID do usuário para renovação da sessão.
+     * Valida o refresh_token no banco e retorna os dados do usuário.
      */
-    public static function validarTokenSemExp($token)
+    public static function validarRefreshToken($refreshtoken)
     {
-        $partes = explode('.', $token);
-        if (count($partes) !== 3) return false;
+        $db = Conexao::conexao();
 
-        list($header, $payload, $signature) = $partes;
+        // 1. Prepara e executa a query
+        $stmt = $db->prepare("SELECT id_colaborador, id_cliente, id_empresa FROM acessos_tokens WHERE refresh_token = :token LIMIT 1");
+        $stmt->execute([":token" => $refreshtoken]);
 
-        // 1. Verifica a assinatura (Indispensável para segurança!)
-        $validSignature = base64_encode(hash_hmac('sha256', "$header.$payload", self::$secret, true));
-        if ($signature !== $validSignature) return false;
+        // 2. Busca o resultado
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // 2. Decodifica o payload
-        $payloadData = json_decode(base64_decode($payload), true);
+        // 3. Se não encontrar o token, retorna false
+        if (!$resultado) {
+            return false;
+        }
 
-        // 3. Retorna os dados sem checar o 'exp'
-        return $payloadData;
+        // 4. Define o tipo com base em qual ID está preenchido
+        // então verificamos se é maior que zero.
+        $idColaborador = (int)($resultado['id_colaborador']);
+        $idCliente = (int)($resultado['id_cliente']);
+        $id_empresa = (int)($resultado['id_empresa']);
+
+        return [
+            'id'    => ($idColaborador != null) ? $idColaborador : $idCliente,
+            'tipo'  => ($idColaborador != null) ? 'colaborador' : 'cliente',
+            'id_empresa'  => $id_empresa
+        ];
     }
 
     /**

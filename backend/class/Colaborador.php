@@ -250,7 +250,7 @@ class Colaborador
         return $stmt->rowCount() > 0;
     }
 
-    public function renovarSessao($idColaborador, $oldRefreshToken, $origem, $ip_address)
+    public function renovarSessao($idColaborador, $id_empresa, $oldRefreshToken, $origem, $ip_address)
     {
         try {
             // 1. Verifica se o token existe e ainda é válido
@@ -271,12 +271,13 @@ class Colaborador
 
             $newRefreshToken = bin2hex(random_bytes(32));
 
-            $sqlInsert = "INSERT INTO acessos_tokens (id_colaborador, refresh_token, origem, ip_address, expires_at, created_at) 
-                          VALUES (:id, :token, :origem, :ip, DATE_ADD(NOW(), INTERVAL 30 DAY), NOW())";
+            $sqlInsert = "INSERT INTO acessos_tokens (id_colaborador, id_empresa, refresh_token, origem, ip_address, expires_at, created_at) 
+                          VALUES (:id, :id_empresa, :token, :origem, :ip, DATE_ADD(NOW(), INTERVAL 30 DAY), NOW())";
 
             $stmtInsert = $this->pdo->prepare($sqlInsert);
             $stmtInsert->execute([
                 ':id' => $idColaborador,
+                ':id_empresa' => $id_empresa,
                 ':token' => $newRefreshToken,
                 ':origem' => $origem,
                 ':ip' => $ip_address

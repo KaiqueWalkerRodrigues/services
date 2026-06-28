@@ -1,6 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from "../../config/api";
 import React, { useState, useEffect } from "react";
 import {
   Search,
@@ -18,6 +17,7 @@ import {
 import { Button } from "../../components/Button";
 import { Modal } from "../../components/Modal";
 import { DataTableEmpresas } from "../../components/DataTables/DataTableEmpresas";
+import apiFetch from "../../config/apifetch";
 
 export default function PaginaAdministracao() {
   // ─── ESTADOS DO CRUD E UI ────────────────────────────────────────────────
@@ -48,30 +48,16 @@ export default function PaginaAdministracao() {
     const carregarDados = async () => {
       try {
         setCarregando(true);
+        // Usando Axios: O retorno já vem em response.data
+        const { data } = await apiFetch.get("/api/empresas");
 
-        const response = await fetch(`${API_BASE_URL}/api/empresas`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Falha ao buscar empresas");
-        }
-
-        const resultado = await response.json();
-
-        // Acessamos a chave 'dados' do objeto retornado pela API
-        if (resultado && Array.isArray(resultado.dados)) {
-          setUsuarios(resultado.dados);
+        if (data && Array.isArray(data.dados)) {
+          setUsuarios(data.dados);
         } else {
-          console.error("Formato de dados inesperado:", resultado);
           setUsuarios([]);
         }
       } catch (error) {
-        console.error("Erro ao buscar usuários:", error);
+        console.error("Erro ao buscar empresas:", error);
       } finally {
         setCarregando(false);
       }

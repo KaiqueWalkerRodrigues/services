@@ -20,10 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $input = json_decode(file_get_contents("php://input"), true);
-$oldRefreshToken = $input['refresh_token'] ?? $_COOKIE['refresh_token'] ?? null;
-$tokenJwt = $input['access_token'] ?? $_COOKIE['access_token'] ?? null;
+$oldRefreshToken = $_COOKIE['refresh_token'] ?? null;
 
-$dadosUsuario = AuthHelper::validarTokenSemExp($tokenJwt);
+$dadosUsuario = AuthHelper::validarRefreshToken($oldRefreshToken);
 
 if (!$dadosUsuario || !$oldRefreshToken) {
     http_response_code(401);
@@ -42,10 +41,10 @@ if (!$tipo) {
 $resultado = null;
 if ($tipo === 'colaborador') {
     $objSessao = new Colaborador();
-    $resultado = $objSessao->renovarSessao($dadosUsuario['id_colaborador'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
+    $resultado = $objSessao->renovarSessao($dadosUsuario['id'], $dadosUsuario['id_empresa'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
 } elseif ($tipo === 'cliente') {
     $objSessao = new Cliente();
-    $resultado = $objSessao->renovarSessao($dadosUsuario['id_cliente'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
+    $resultado = $objSessao->renovarSessao($dadosUsuario['id'], $dadosUsuario['id_empresa'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
 } else {
     http_response_code(400);
     echo json_encode(["sucesso" => false, "mensagem" => "Tipo de usuário inválido: {$tipo}"]);
