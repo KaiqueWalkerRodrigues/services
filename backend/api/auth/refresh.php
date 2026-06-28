@@ -42,10 +42,10 @@ if (!$tipo) {
 $resultado = null;
 if ($tipo === 'colaborador') {
     $objSessao = new Colaborador();
-    $resultado = $objSessao->renovarSessao($dadosUsuario['sub'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
+    $resultado = $objSessao->renovarSessao($dadosUsuario['id_colaborador'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
 } elseif ($tipo === 'cliente') {
     $objSessao = new Cliente();
-    $resultado = $objSessao->renovarSessao($dadosUsuario['sub'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
+    $resultado = $objSessao->renovarSessao($dadosUsuario['id_cliente'], $oldRefreshToken, 'web', $_SERVER['REMOTE_ADDR']);
 } else {
     http_response_code(400);
     echo json_encode(["sucesso" => false, "mensagem" => "Tipo de usuário inválido: {$tipo}"]);
