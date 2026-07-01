@@ -47,14 +47,19 @@ class AuthHelper
 
         // 4. Define o tipo com base em qual ID está preenchido
         // então verificamos se é maior que zero.
-        $idColaborador = (int)($resultado['id_colaborador']);
-        $idCliente = (int)($resultado['id_cliente']);
-        $id_empresa = (int)($resultado['id_empresa']);
+        $idColaborador = isset($resultado['id_colaborador']) ? (int) $resultado['id_colaborador'] : null;
+        $idCliente = isset($resultado['id_cliente']) ? (int) $resultado['id_cliente'] : null;
+        $id_empresa = isset($resultado['id_empresa']) ? (int) $resultado['id_empresa'] : null;
+
+        $tipo = $idColaborador ? 'colaborador' : 'cliente';
+        $id = $idColaborador ?: $idCliente;
 
         return [
-            'id'    => ($idColaborador != null) ? $idColaborador : $idCliente,
-            'tipo'  => ($idColaborador != null) ? 'colaborador' : 'cliente',
-            'id_empresa'  => $id_empresa
+            'id'            => $id,
+            'id_colaborador' => $idColaborador ?: null,
+            'id_cliente'    => $idCliente ?: null,
+            'tipo'          => $tipo,
+            'id_empresa'    => $id_empresa ?: null,
         ];
     }
 

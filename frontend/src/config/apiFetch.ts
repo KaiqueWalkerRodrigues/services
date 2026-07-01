@@ -17,14 +17,31 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+const isRefreshRequest = (request: any) => {
+  const url: string | undefined = request?.url;
+  return !!(
+    url &&
+    url.includes("/api/auth/refresh") &&
+    request.method?.toLowerCase() === "post"
+  );
+};
+
 apiFetch.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const refreshRequest = isRefreshRequest(originalRequest);
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !refreshRequest
+    ) {
       if (isRefreshing) {
-        // Se já estiver renovando, coloca a requisição na fila
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -37,16 +54,17 @@ apiFetch.interceptors.response.use(
 
       try {
         await apiFetch.post("/api/auth/refresh");
-        processQueue(null); // Libera a fila de sucesso
+        processQueue(null);
         return apiFetch(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null); // Libera a fila com erro
+        processQueue(refreshError, null);
         window.location.href = "/loginColaborador";
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
+
     return Promise.reject(error);
   },
 );

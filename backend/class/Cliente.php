@@ -208,7 +208,7 @@ class Cliente
         return $stmt->rowCount() > 0;
     }
 
-    public function renovarSessao($idCliente, $oldRefreshToken, $origem, $ip_address)
+    public function renovarSessao($idCliente, $id_empresa, $oldRefreshToken, $origem, $ip_address)
     {
         try {
             // 1. Verifica se o token existe e ainda é válido

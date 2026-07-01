@@ -57,6 +57,12 @@ if ($resultado['status'] === 'sucesso') {
     $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
 
     $payloadArr = is_array($dadosUsuario) ? $dadosUsuario : [];
+    if ($tipo === 'colaborador' && empty($payloadArr['id_colaborador'])) {
+        $payloadArr['id_colaborador'] = $dadosUsuario['id'];
+    }
+    if ($tipo === 'cliente' && empty($payloadArr['id_cliente'])) {
+        $payloadArr['id_cliente'] = $dadosUsuario['id'];
+    }
     unset($payloadArr['exp']);
     $payloadArr['exp'] = time() + (10 * 60);
     $payload = base64_encode(json_encode($payloadArr));

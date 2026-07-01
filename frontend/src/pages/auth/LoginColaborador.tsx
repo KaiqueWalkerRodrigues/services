@@ -3,6 +3,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useState, type FormEvent } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { realizarLoginEmpresa } from "../../api/auth";
+import apiFetch from "../../config/apiFetch";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../config/api";
 
@@ -20,14 +21,16 @@ export default function LoginColaborador() {
     try {
       const data = await realizarLoginEmpresa(codigo, usuario, senha);
 
-      // Busca nome e dados completos do usuário
-      const meRes = await fetch(`${API_BASE_URL}/api/auth/me`, {
-        credentials: "include",
-      });
-      const meData = await meRes.json();
+      // Antes de buscar /me, tenta renovar a sessão e garantir que os cookies foram atualizados.
+      try {
+        await apiFetch.post("/api/auth/refresh");
+      } catch {
+        // Se não renovar, não faz buscar /me para evitar 401 imediato.
+      }
 
-      if (meData.sucesso) {
-        auth?.login(meData.dados); // { id_colaborador, nome }
+      const meRes = await apiFetch.get("/api/auth/me");
+      if (meRes.data.sucesso) {
+        auth?.login(meRes.data.dados); // { id_colaborador, nome }
       }
 
       toast.success("Acesso liberado!", { id: toastId });

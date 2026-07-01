@@ -1,86 +1,73 @@
-// AuthProvider.tsx
 import { useState, useEffect, useCallback, useRef } from "react";
 import { type Usuario } from "../types/auth";
 import { Outlet, useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../config/api";
+import apiFetch from "../config/apiFetch";
 import { AuthContext } from "./AuthContext";
 
 export function AuthProvider() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [carregando, setCarregando] = useState<boolean>(true);
   const navigate = useNavigate();
-  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
-    null,
-  );
+  const initialFetchRef = useRef(false);
 
   const deslogar = useCallback(() => {
     setUsuario(null);
-    if (refreshIntervalRef.current) {
-      clearInterval(refreshIntervalRef.current);
-      refreshIntervalRef.current = null;
-    }
     navigate("/loginColaborador");
   }, [navigate]);
 
-  const tentarRenovar = useCallback(async (): Promise<boolean> => {
-    const refresh = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-    });
-    return refresh.ok;
+  const renovarSessao = useCallback(async (): Promise<boolean> => {
+    try {
+      await apiFetch.post("/api/auth/refresh");
+      return true;
+    } catch {
+      return false;
+    }
   }, []);
 
-  const buscarUsuario = useCallback(async (): Promise<boolean> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
-      credentials: "include",
-    });
-
-    if (response.status === 401) {
-      const renovado = await tentarRenovar();
-      if (!renovado) return false;
-
-      const retry = await fetch(`${API_BASE_URL}/api/auth/me`, {
-        credentials: "include",
-      });
-      if (!retry.ok) return false;
-
-      const data = await retry.json();
-      if (data.sucesso) setUsuario(data.dados);
-      return true;
+  const buscarUsuario = useCallback(async (): Promise<void> => {
+    try {
+      const response = await apiFetch.get("/api/auth/me");
+      if (response.data.sucesso) {
+        setUsuario(response.data.dados);
+      }
+    } catch {
+      setUsuario(null);
     }
+  }, []);
 
-    if (!response.ok) return false;
-
-    const data = await response.json();
-    if (data.sucesso) setUsuario(data.dados);
-    return true;
-  }, [tentarRenovar]);
-
-  // Verificação inicial
+  // Inicialização segura
   useEffect(() => {
-    buscarUsuario().finally(() => setCarregando(false));
-  }, [buscarUsuario]);
+    if (initialFetchRef.current) return;
+    initialFetchRef.current = true;
 
-  // Renovação automática a cada 9 minutos enquanto estiver logado
+    (async () => {
+      const renovado = await renovarSessao();
+      if (renovado) {
+        await buscarUsuario();
+      } else {
+        setUsuario(null);
+      }
+      setCarregando(false);
+    })();
+  }, [buscarUsuario, renovarSessao]);
+
+  // Mantemos o intervalo apenas como um "keep-alive" preventivo
   useEffect(() => {
     if (!usuario) return;
 
-    refreshIntervalRef.current = setInterval(
+    const interval = setInterval(
       async () => {
-        const renovado = await tentarRenovar();
-        if (!renovado) deslogar();
+        try {
+          await apiFetch.post("/api/auth/refresh");
+        } catch {
+          deslogar();
+        }
       },
       9 * 60 * 1000,
-    );
+    ); // 9 minutos
 
-    return () => {
-      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
-    };
-  }, [usuario, tentarRenovar, deslogar]);
-
-  const login = useCallback((userData: Usuario) => {
-    setUsuario(userData);
-  }, []);
+    return () => clearInterval(interval);
+  }, [usuario, deslogar]);
 
   if (carregando) {
     return (
@@ -92,7 +79,12 @@ export function AuthProvider() {
 
   return (
     <AuthContext.Provider
-      value={{ usuario, carregando, login, logout: deslogar }}
+      value={{
+        usuario,
+        carregando,
+        login: (u) => setUsuario(u),
+        logout: deslogar,
+      }}
     >
       <Outlet />
     </AuthContext.Provider>

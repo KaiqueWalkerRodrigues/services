@@ -34,15 +34,22 @@ if ($assinatura_esperada !== $partes[2]) {
     exit;
 }
 
-if ($payload['exp'] < time()) {
+if (!isset($payload['exp']) || $payload['exp'] < time()) {
     http_response_code(401);
     echo json_encode(["sucesso" => false, "mensagem" => "Token expirado"]);
     exit;
 }
 
+$idColaborador = $payload['id_colaborador'] ?? $payload['id'] ?? null;
+if (!$idColaborador) {
+    http_response_code(401);
+    echo json_encode(["sucesso" => false, "mensagem" => "Token inválido ou sem colaborador"]);
+    exit;
+}
+
 // Busca dados atualizados do colaborador
 $colaborador = new Colaborador();
-$resultado = $colaborador->mostrar($payload['id_colaborador']);
+$resultado = $colaborador->mostrar($idColaborador);
 
 if ($resultado['status'] === 'sucesso') {
     $usuario = $resultado['dados'];
