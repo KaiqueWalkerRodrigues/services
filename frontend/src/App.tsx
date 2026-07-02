@@ -11,7 +11,8 @@ import LoginCliente from "./pages/auth/LoginCliente";
 import LoginColaborador from "./pages/auth/LoginColaborador";
 import Logout from "./pages/auth/Logout";
 import CadastrarCliente from "./pages/auth/cadastro/CadastrarCliente";
-import PaginaAdministracao from "./pages/admin/Admin";
+import PaginaDashBoards from "./pages/admin/Dashboards";
+import PaginaEmpresas from "./pages/admin/Empresas";
 
 export default function App() {
   return (
@@ -53,11 +54,22 @@ export default function App() {
           />
 
           <Route
-            path="/admin"
+            path="/admin/dashboards"
             element={
               <ProtectedRouteColaborador>
                 <PageTitle title="Admin">
-                  <PaginaAdministracao />
+                  <PaginaDashBoards />
+                </PageTitle>
+              </ProtectedRouteColaborador>
+            }
+          />
+
+          <Route
+            path="/admin/empresas"
+            element={
+              <ProtectedRouteColaborador>
+                <PageTitle title="Admin - Empresa">
+                  <PaginaEmpresas />
                 </PageTitle>
               </ProtectedRouteColaborador>
             }
