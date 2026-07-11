@@ -6,20 +6,25 @@ import { DataTableEmpresas } from "../../components/DataTables/DataTableEmpresas
 import { Button } from "../../components/Button";
 import apiFetch from "../../config/apiFetch";
 import { CadastrarEmpresaModal } from "../../components/Modal/CadastrarEmpresaModal";
+import { EditarEmpresaModal } from "../../components/Modal/EditarEmpresaModal";
+import { DeletarEmpresaModal } from "../../components/Modal/DeletarEmpresaModal";
 
 export default function PaginaEmpresas() {
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // função reutilizável, não presa ao useEffect
+  const [isCadastrarOpen, setIsCadastrarOpen] = useState(false);
+  const [isEditarOpen, setIsEditarOpen] = useState(false);
+  const [isDeletarOpen, setIsDeletarOpen] = useState(false);
+  const [empresaSelecionada, setEmpresaSelecionada] = useState<any>(null);
+
   const carregarEmpresas = useCallback(async () => {
     try {
       const { data } = await apiFetch.get("/api/empresas");
       setEmpresas(data.dados || []);
     } catch (error) {
-      console.error("Erro:", error);
+      console.error("Erro ao carregar empresas:", error);
     } finally {
       setCarregando(false);
     }
@@ -28,11 +33,9 @@ export default function PaginaEmpresas() {
   useEffect(() => {
     carregarEmpresas();
 
-    // refaz a busca sempre que o usuário volta pra aba
     const handleFocus = () => carregarEmpresas();
     window.addEventListener("focus", handleFocus);
 
-    // opcional: polling a cada 60s
     const interval = setInterval(carregarEmpresas, 60_000);
 
     return () => {
@@ -41,18 +44,14 @@ export default function PaginaEmpresas() {
     };
   }, [carregarEmpresas]);
 
-  const handleEliminar = async (id: string) => {
-    try {
-      await apiFetch.delete(`/api/empresas/${id}`);
-      await carregarEmpresas();
-    } catch (error) {
-      console.error("Erro ao excluir:", error);
-    }
+  const handleEditar = (empresa: any) => {
+    setEmpresaSelecionada(empresa);
+    setIsEditarOpen(true);
   };
 
-  const handleCriarOuEditar = async () => {
-    // depois de salvar (POST/PUT) no seu modal/form:
-    await carregarEmpresas();
+  const handleEliminar = (empresa: any) => {
+    setEmpresaSelecionada(empresa);
+    setIsDeletarOpen(true);
   };
 
   return (
@@ -69,8 +68,7 @@ export default function PaginaEmpresas() {
             <div>
               <h2 className="text-2xl font-bold">Empresas</h2>
             </div>
-            {/* Abrir o modal ao clicar */}
-            <Button color="success" onClick={() => setIsModalOpen(true)}>
+            <Button color="success" onClick={() => setIsCadastrarOpen(true)}>
               + Nova Empresa
             </Button>
           </div>
@@ -80,7 +78,7 @@ export default function PaginaEmpresas() {
           ) : (
             <DataTableEmpresas
               dados={empresas}
-              onEditar={handleCriarOuEditar}
+              onEditar={handleEditar}
               onEliminar={handleEliminar}
             />
           )}
@@ -88,10 +86,34 @@ export default function PaginaEmpresas() {
       </main>
 
       <CadastrarEmpresaModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isCadastrarOpen}
+        onClose={() => setIsCadastrarOpen(false)}
         onSuccess={carregarEmpresas}
       />
+
+      {empresaSelecionada && (
+        <EditarEmpresaModal
+          isOpen={isEditarOpen}
+          onClose={() => {
+            setIsEditarOpen(false);
+            setEmpresaSelecionada(null);
+          }}
+          onSuccess={carregarEmpresas}
+          empresa={empresaSelecionada}
+        />
+      )}
+
+      {empresaSelecionada && isDeletarOpen && (
+        <DeletarEmpresaModal
+          isOpen={isDeletarOpen}
+          onClose={() => {
+            setIsDeletarOpen(false);
+            setEmpresaSelecionada(null);
+          }}
+          onSuccess={carregarEmpresas}
+          empresa={empresaSelecionada}
+        />
+      )}
     </div>
   );
 }

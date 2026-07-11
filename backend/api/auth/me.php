@@ -14,29 +14,10 @@ if (!$token) {
 }
 
 // Valida o JWT
-$partes = explode('.', $token);
-if (count($partes) !== 3) {
+$payload = AuthHelper::validarToken($token);
+if (!$payload) {
     http_response_code(401);
-    echo json_encode(["sucesso" => false]);
-    exit;
-}
-
-$payload = json_decode(base64_decode($partes[1]), true);
-$secret  = getenv('JWT_SECRET') ?: 'abc123';
-
-$assinatura_esperada = base64_encode(
-    hash_hmac('sha256', "{$partes[0]}.{$partes[1]}", $secret, true)
-);
-
-if ($assinatura_esperada !== $partes[2]) {
-    http_response_code(401);
-    echo json_encode(["sucesso" => false, "mensagem" => "Token inválido"]);
-    exit;
-}
-
-if (!isset($payload['exp']) || $payload['exp'] < time()) {
-    http_response_code(401);
-    echo json_encode(["sucesso" => false, "mensagem" => "Token expirado"]);
+    echo json_encode(["sucesso" => false, "mensagem" => "Token inválido ou expirado"]);
     exit;
 }
 
@@ -47,22 +28,26 @@ if (!$idColaborador) {
     exit;
 }
 
-// Busca dados atualizados do colaborador
+// Busca dados atualizados do colaborador para manter compatibilidade com o frontend
 $colaborador = new Colaborador();
 $resultado = $colaborador->mostrar($idColaborador);
 
+$dadosResposta = [
+    "id_colaborador" => (int) $idColaborador,
+    "tipo" => $payload['tipo'] ?? null,
+    "is_sa" => (bool) ($payload['is_sa'] ?? false),
+    "grupos" => $payload['grupos'] ?? [],
+    "permissoes" => $payload['permissoes'] ?? [],
+    "empresas_acesso" => $payload['empresas_acesso'] ?? []
+];
+
 if ($resultado['status'] === 'sucesso') {
     $usuario = $resultado['dados'];
-
-    http_response_code(200);
-    echo json_encode([
-        "sucesso" => true,
-        "dados" => [
-            "id_colaborador" => $usuario['id_colaborador'],
-            "nome"           => $usuario['nome']
-        ]
-    ]);
-} else {
-    http_response_code(404);
-    echo json_encode(["sucesso" => false, "mensagem" => $resultado['mensagem']]);
+    $dadosResposta['nome'] = $usuario['nome'] ?? null;
 }
+
+http_response_code(200);
+echo json_encode([
+    "sucesso" => true,
+    "dados" => $dadosResposta
+]);

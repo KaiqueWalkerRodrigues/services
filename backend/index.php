@@ -66,7 +66,7 @@ $rotas = [
     ],
     'api/auth/me' => [
         'file' => 'auth/me.php',
-        'login' => false,
+        'login' => true,
         'permissoes' => null
     ],
     'api/auth/refresh' => [
@@ -162,23 +162,18 @@ if (rotaExigeLogin($requiredLogin, $method)) {
     $token = AuthHelper::obterTokenJwt();
     $dadosUsuario = $token ? AuthHelper::validarToken($token) : false;
 
-    // Se o JWT é válido, fazemos a checagem extra de "sessão viva"
-    if ($dadosUsuario) {
-        $refreshToken = $_COOKIE['refresh_token'] ?? null;
-
-        // Verifica se a sessão ainda existe no banco (validarRefreshToken que criamos antes)
-        $sessaoValida = AuthHelper::validarRefreshToken($refreshToken);
-
-        if (!$sessaoValida) {
-            // Token de acesso é válido, mas o refresh_token foi derrubado/não existe
-            http_response_code(401);
-            echo json_encode(["status" => "erro", "mensagem" => "Sessão encerrada pelo servidor (401)."]);
-            exit;
-        }
-    } else {
-        // JWT inválido ou ausente
+    if (!$dadosUsuario) {
         http_response_code(401);
         echo json_encode(["status" => "erro", "mensagem" => "Não autorizado. Faça login (401)."]);
+        exit;
+    }
+
+    $refreshToken = $_COOKIE['refresh_token'] ?? null;
+    $sessaoValida = AuthHelper::validarRefreshToken($refreshToken);
+
+    if (!$sessaoValida) {
+        http_response_code(401);
+        echo json_encode(["status" => "erro", "mensagem" => "Sessão encerrada pelo servidor (401)."]);
         exit;
     }
 } else {

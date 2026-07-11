@@ -11,8 +11,19 @@ $empresa = new Empresa();
 switch ($metodo) {
     case 'GET':
         if (isset($_GET['id'])) {
+            if (!AuthHelper::usuarioTemPermissao("empresas.mostrar", $dadosUsuario)) {
+                http_response_code(403);
+                echo json_encode(["erro" => "Sem Permissão"]);
+                exit;
+            }
             echo json_encode($empresa->mostrar($_GET['id']));
         } else {
+            if (!AuthHelper::usuarioTemPermissao("empresas.listar", $dadosUsuario)) {
+                http_response_code(403);
+                echo json_encode(["erro" => "Sem Permissão"]);
+                exit;
+            }
+
             echo json_encode($empresa->listar());
         }
         break;

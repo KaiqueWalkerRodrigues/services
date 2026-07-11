@@ -21,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $input = json_decode(file_get_contents("php://input"), true);
 $oldRefreshToken = $_COOKIE['refresh_token'] ?? null;
+$tokenAtual = AuthHelper::obterTokenJwt();
+$payloadAtual = $tokenAtual ? AuthHelper::validarToken($tokenAtual) : null;
 
 $dadosUsuario = AuthHelper::validarRefreshToken($oldRefreshToken);
 
@@ -53,21 +55,26 @@ if ($tipo === 'colaborador') {
 
 if ($resultado['status'] === 'sucesso') {
     // 1. Gera um NOVO JWT (10 min) preservando os dados do payload anterior
-    $secret = getenv('JWT_SECRET') ?: 'abc123';
-    $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+    $payloadArr = is_array($payloadAtual) && !empty($payloadAtual) ? $payloadAtual : [];
 
-    $payloadArr = is_array($dadosUsuario) ? $dadosUsuario : [];
+    if (empty($payloadArr)) {
+        $payloadArr = is_array($dadosUsuario) ? $dadosUsuario : [];
+    }
+
     if ($tipo === 'colaborador' && empty($payloadArr['id_colaborador'])) {
         $payloadArr['id_colaborador'] = $dadosUsuario['id'];
     }
     if ($tipo === 'cliente' && empty($payloadArr['id_cliente'])) {
         $payloadArr['id_cliente'] = $dadosUsuario['id'];
     }
+
+    if (!isset($payloadArr['tipo'])) {
+        $payloadArr['tipo'] = $tipo;
+    }
+
     unset($payloadArr['exp']);
     $payloadArr['exp'] = time() + (10 * 60);
-    $payload = base64_encode(json_encode($payloadArr));
-    $signature = base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true));
-    $newJwt = "$header.$payload.$signature";
+    $newJwt = AuthHelper::gerarToken($payloadArr);
 
     // 2. Atualiza os Cookies no navegador do usuário
     setcookie("access_token", $newJwt, [

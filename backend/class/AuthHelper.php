@@ -2,7 +2,19 @@
 
 class AuthHelper
 {
-    private static $secret = 'abc123'; // O ideal é usar getenv('JWT_SECRET')
+    private static function getSecret()
+    {
+        return getenv('JWT_SECRET') ?: 'abc123';
+    }
+
+    public static function gerarToken(array $payload)
+    {
+        $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+        $payloadBase64 = base64_encode(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $signature = base64_encode(hash_hmac('sha256', "$header.$payloadBase64", self::getSecret(), true));
+
+        return "$header.$payloadBase64.$signature";
+    }
 
     public static function validarToken($token)
     {
@@ -12,11 +24,14 @@ class AuthHelper
         list($header, $payload, $signature) = $partes;
 
         // Verifica a assinatura
-        $validSignature = base64_encode(hash_hmac('sha256', "$header.$payload", self::$secret, true));
+        $validSignature = base64_encode(hash_hmac('sha256', "$header.$payload", self::getSecret(), true));
         if ($signature !== $validSignature) return false;
 
         // Decodifica o payload
         $payloadData = json_decode(base64_decode($payload), true);
+        if (!is_array($payloadData)) {
+            return false;
+        }
 
         // Verifica se expirou
         if (isset($payloadData['exp']) && $payloadData['exp'] < time()) {

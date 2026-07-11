@@ -159,7 +159,7 @@ class Colaborador
     public function login($login, $senha, $id_empresa, $origem, $ip_address = null)
     {
         try {
-            // 1. Busca colaborador (is_sa agora está na tabela colaboradores)
+            // 1. Busca colaborador
             $sql = "SELECT 
                         c.id_colaborador, 
                         c.login, 

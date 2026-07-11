@@ -26,16 +26,11 @@ if (!empty($dados->email) && !empty($dados->senha)) {
         $usuario = $resultadoLogin['dados_usuario'];
 
         // --- GERAÇÃO DO JWT ---
-        $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-        $payload = base64_encode(json_encode([
+        $token_jwt = AuthHelper::gerarToken([
             'sub' => $usuario['id_cliente'],
             'tipo' => 'cliente',
             'exp' => time() + (10 * 60)
-        ]));
-
-        $secret = getenv('JWT_SECRET') ?: 'abc123';
-        $signature = base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true));
-        $token_jwt = "$header.$payload.$signature";
+        ]);
 
         // --- TRATATIVA PARA WEB (COOKIE) ---
         // Se for web, salvamos o JWT em um cookie seguro

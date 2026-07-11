@@ -33,7 +33,6 @@ if (!empty($dados->login) && !empty($dados->senha)) {
 
         $empresas_acesso = $colaborador->obterEmpresasAcesso($usuario['id_colaborador']);
 
-        $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
         $payloadArray = [
             'id_colaborador' => (int)$usuario['id_colaborador'],
             'tipo' => 'colaborador',
@@ -44,10 +43,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
             'exp' => time() + (10 * 60)
         ];
 
-        $payload = base64_encode(json_encode($payloadArray));
-        $secret = getenv('JWT_SECRET') ?: 'abc123';
-        $signature = base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true));
-        $token_jwt = "$header.$payload.$signature";
+        $token_jwt = AuthHelper::gerarToken($payloadArray);
 
         $path = null;
         if ((bool)$is_sa == true) {

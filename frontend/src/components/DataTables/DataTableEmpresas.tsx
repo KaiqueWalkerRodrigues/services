@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { DataTable, type ColumnDef } from "../DataTable";
 import { Button } from "../Button";
 
@@ -15,7 +14,7 @@ interface Empresa {
 interface DataTableEmpresasProps {
   dados: Empresa[];
   onEditar: (item: Empresa) => void;
-  onEliminar: (id: number) => void;
+  onEliminar: (id: Empresa) => void;
 }
 
 export function DataTableEmpresas({
@@ -40,11 +39,7 @@ export function DataTableEmpresas({
           <Button size="sm" color="primary" onClick={() => onEditar(item)}>
             Editar
           </Button>
-          <Button
-            size="sm"
-            color="danger"
-            onClick={() => onEliminar(item.id_empresa)}
-          >
+          <Button size="sm" color="danger" onClick={() => onEliminar(item)}>
             Excluir
           </Button>
         </div>
