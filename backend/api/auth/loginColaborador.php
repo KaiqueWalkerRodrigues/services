@@ -51,7 +51,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
 
         $path = null;
         if ((bool)$is_sa == true) {
-            $path = "/admin";
+            $path = "/admin/dashboards";
         } else {
             $path = "/home";
         }
