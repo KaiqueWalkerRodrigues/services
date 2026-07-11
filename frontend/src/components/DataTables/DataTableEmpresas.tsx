@@ -36,6 +36,9 @@ export function DataTableEmpresas({
       accessorKey: "id_empresa",
       cell: (item) => (
         <div className="flex items-center gap-2">
+          <Button size="sm" color="warning" onClick={() => onEditar(item)}>
+            Usuários
+          </Button>
           <Button size="sm" color="primary" onClick={() => onEditar(item)}>
             Editar
           </Button>

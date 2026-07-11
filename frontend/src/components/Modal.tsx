@@ -74,7 +74,7 @@ export function Modal({
               </button>
               <button
                 onClick={onConfirm}
-                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-900 text-white rounded-xl transition-colors font-medium"
               >
                 Deletar
               </button>

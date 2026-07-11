@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Modal } from "../Modal";
 import apiFetch from "../../config/apiFetch";
+import { showToast } from "../Toast";
 
 interface Empresa {
   id_empresa: number;
@@ -33,10 +34,16 @@ export function DeletarEmpresaModal({
           id_empresa: empresa.id_empresa,
         },
       });
+      showToast({ type: "success", message: "Empresa excluída com sucesso!" });
       onSuccess();
       onClose();
     } catch (error) {
       console.error("Erro ao excluir empresa:", error);
+      const errorMessage =
+        (error as any)?.response?.data?.message ||
+        (error as any)?.response?.data?.mensagem ||
+        "Não foi possível excluir a empresa.";
+      showToast({ type: "error", message: errorMessage });
     } finally {
       setLoading(false);
     }

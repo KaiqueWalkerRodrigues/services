@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { Modal } from "../Modal";
 import apiFetch from "../../config/apiFetch";
 import { Button } from "../Button";
+import { showToast } from "../Toast";
 
 interface Empresa {
-  id: string;
+  id_empresa: string;
   nome: string;
   codigo_empresa: string | number;
 }
@@ -24,6 +25,7 @@ export function EditarEmpresaModal({
   onSuccess,
   empresa,
 }: EditarEmpresaModalProps) {
+  const [id_empresa, setid_empresa] = useState(empresa.id_empresa);
   const [nome, setNome] = useState(empresa.nome);
   const [codigo_empresa, setCodigoEmpresa] = useState(
     String(empresa.codigo_empresa),
@@ -34,6 +36,7 @@ export function EditarEmpresaModal({
   useEffect(() => {
     setNome(empresa.nome);
     setCodigoEmpresa(String(empresa.codigo_empresa));
+    setid_empresa(String(empresa.id_empresa));
   }, [empresa]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,14 +44,24 @@ export function EditarEmpresaModal({
     setLoading(true);
 
     try {
-      await apiFetch.put(`/api/empresas/${empresa.id}`, {
+      await apiFetch.put(`/api/empresas`, {
+        id_empresa,
         nome,
         codigo_empresa,
+      });
+      showToast({
+        type: "success",
+        message: "Empresa atualizada com sucesso!",
       });
       onSuccess();
       onClose();
     } catch (error) {
       console.error("Erro ao atualizar empresa:", error);
+      const errorMessage =
+        (error as any)?.response?.data?.message ||
+        (error as any)?.response?.data?.mensagem ||
+        "Não foi possível atualizar a empresa.";
+      showToast({ type: "error", message: errorMessage });
     } finally {
       setLoading(false);
     }

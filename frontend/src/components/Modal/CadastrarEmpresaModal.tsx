@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal } from "../Modal";
 import apiFetch from "../../config/apiFetch";
 import { Button } from "../Button";
+import { showToast } from "../Toast";
 
 interface CadastrarEmpresaModalProps {
   isOpen: boolean;
@@ -26,12 +27,21 @@ export function CadastrarEmpresaModal({
 
     try {
       await apiFetch.post("/api/empresas", { nome, codigo_empresa });
+      showToast({
+        type: "success",
+        message: "Empresa cadastrada com sucesso!",
+      });
       onSuccess();
       onClose();
       setNome("");
       setcodigo_empresa("");
     } catch (error) {
       console.error("Erro ao cadastrar empresa:", error);
+      const errorMessage =
+        (error as any)?.response?.data?.message ||
+        (error as any)?.response?.data?.mensagem ||
+        "Não foi possível cadastrar a empresa.";
+      showToast({ type: "error", message: errorMessage });
     } finally {
       setLoading(false);
     }
