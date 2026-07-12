@@ -8,6 +8,7 @@ import apiFetch from "../../config/apiFetch";
 import { CadastrarColaboradorModal } from "../../components/Modal/CadastrarColaboradorModal";
 import { EditarColaboradorModal } from "../../components/Modal/EditarColaboradorModal";
 import { DeletarColaboradorModal } from "../../components/Modal/DeletarColaboradorModal";
+import { TrocarSenhaColaboradorModal } from "../../components/Modal/TrocarSenhaColaboradorModal"; // <-- Faltava esta importação
 
 export default function PaginaColaboradores() {
   const [colaboradores, setColaboradores] = useState<any[]>([]);
@@ -16,6 +17,7 @@ export default function PaginaColaboradores() {
 
   const [isCadastrarOpen, setIsCadastrarOpen] = useState(false);
   const [isEditarOpen, setIsEditarOpen] = useState(false);
+  const [isTrocarSenhaOpen, setIsTrocarSenhaOpen] = useState(false);
   const [isDeletarOpen, setIsDeletarOpen] = useState(false);
   const [colaboradorSelecionada, setColaboradorSelecionada] =
     useState<any>(null);
@@ -50,6 +52,11 @@ export default function PaginaColaboradores() {
     setIsEditarOpen(true);
   };
 
+  const handleTrocarSenha = (colaborador: any) => {
+    setColaboradorSelecionada(colaborador);
+    setIsTrocarSenhaOpen(true);
+  };
+
   const handleEliminar = (colaborador: any) => {
     setColaboradorSelecionada(colaborador);
     setIsDeletarOpen(true);
@@ -81,6 +88,7 @@ export default function PaginaColaboradores() {
               dados={colaboradores}
               onEditar={handleEditar}
               onEliminar={handleEliminar}
+              onTrocarSenha={handleTrocarSenha}
               isOpen={true}
               onRefresh={carregarColaboradores}
             />
@@ -99,6 +107,18 @@ export default function PaginaColaboradores() {
           isOpen={isEditarOpen}
           onClose={() => {
             setIsEditarOpen(false);
+            setColaboradorSelecionada(null);
+          }}
+          onSuccess={carregarColaboradores}
+          colaborador={colaboradorSelecionada}
+        />
+      )}
+
+      {colaboradorSelecionada && (
+        <TrocarSenhaColaboradorModal
+          isOpen={isTrocarSenhaOpen}
+          onClose={() => {
+            setIsTrocarSenhaOpen(false);
             setColaboradorSelecionada(null);
           }}
           onSuccess={carregarColaboradores}

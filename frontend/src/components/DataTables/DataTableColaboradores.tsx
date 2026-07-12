@@ -22,6 +22,7 @@ interface DataTableColaboradorProps {
   dados: Colaborador[];
   onEditar: (item: Colaborador) => void;
   onEliminar: (id: Colaborador) => void;
+  onTrocarSenha: (item: Colaborador) => void;
   isOpen: boolean;
 }
 
@@ -35,6 +36,7 @@ export function DataTableColaboradores({
   dados,
   onEditar,
   onEliminar,
+  onTrocarSenha,
   isOpen,
 }: DataTableColaboradorProps) {
   const [isEmpresasModalOpen, setIsEmpresasModalOpen] = useState(false);
@@ -114,6 +116,9 @@ export function DataTableColaboradores({
       accessorKey: "id_colaborador",
       cell: (item) => (
         <div className="flex items-center gap-2">
+          <Button size="sm" color="pink" onClick={() => onTrocarSenha(item)}>
+            Trocar Senha
+          </Button>
           <Button size="sm" color="primary" onClick={() => onEditar(item)}>
             Editar
           </Button>

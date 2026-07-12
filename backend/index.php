@@ -86,6 +86,7 @@ $rotas = [
         'login' => [
             'GET' => true,
             'PUT' => true,
+            'PATCH' => true,
             'DELETE' => true,
             'POST' => false,
             'default' => true

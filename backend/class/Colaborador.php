@@ -104,6 +104,33 @@ class Colaborador
         }
     }
 
+    public function trocarSenhaAdmin($id_colaborador, $senha)
+    {
+        try {
+            $sql = "UPDATE colaboradores SET
+                    senha = :senha, updated_at = NOW() 
+                    WHERE id_colaborador = :id_colaborador AND deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sql);
+
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+
+            $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
+            $stmt->bindParam(':senha', $senhaHash);
+
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                return ['status' => 'sucesso', 'mensagem' => 'Senha alterado com sucesso!'];
+            } else {
+                return ['status' => 'erro', 'mensagem' => 'Colaborador não encontrado ou não houve alterações.'];
+            }
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return ['status' => 'erro', 'mensagem' => 'Erro ao atualizar colaborador: ' . $e->getMessage()];
+        }
+    }
+
     public function deletar($id_colaborador)
     {
         try {
