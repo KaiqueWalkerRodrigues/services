@@ -90,7 +90,7 @@ export default function PaginaColaboradores() {
               onEliminar={handleEliminar}
               onTrocarSenha={handleTrocarSenha}
               isOpen={true}
-              onRefresh={carregarColaboradores}
+              onAtualizarDados={carregarColaboradores}
             />
           )}
         </div>

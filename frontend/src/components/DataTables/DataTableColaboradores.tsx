@@ -23,6 +23,7 @@ interface DataTableColaboradorProps {
   onEditar: (item: Colaborador) => void;
   onEliminar: (id: Colaborador) => void;
   onTrocarSenha: (item: Colaborador) => void;
+  onAtualizarDados?: () => void; // Opcional: para atualizar a tabela principal em segundo plano
   isOpen: boolean;
 }
 
@@ -37,6 +38,7 @@ export function DataTableColaboradores({
   onEditar,
   onEliminar,
   onTrocarSenha,
+  onAtualizarDados,
   isOpen,
 }: DataTableColaboradorProps) {
   const [isEmpresasModalOpen, setIsEmpresasModalOpen] = useState(false);
@@ -54,33 +56,56 @@ export function DataTableColaboradores({
     setColaboradorSelecionado(item);
     setEmpresasVinculadas([]);
     setEmpresasIdsVinculadas([]);
+    setLoading(true);
 
     try {
-      const { data } = await apiFetch.get("/api/empresas");
-      const empresas = Array.isArray(data?.dados) ? data.dados : [];
-      const ids = (item.empresas || "")
+      // 1. Busca a lista global de empresas disponíveis
+      const responseEmpresas = await apiFetch.get("/api/empresas");
+      const listaEmpresas = Array.isArray(responseEmpresas.data?.dados)
+        ? responseEmpresas.data.dados
+        : [];
+      setEmpresas(listaEmpresas);
+
+      // 2. ✨ BUSCA REAL EM TEMPO REAL: Pega os dados mais recentes do colaborador direto da API
+      // Nota: Ajuste o endpoint "/api/colaboradores/" se o seu backend usar outra rota para buscar um único item
+      const responseColaborador = await apiFetch.get(
+        `/api/colaboradores/${item.id_colaborador}`,
+      );
+      const colaboradorAtualizado =
+        responseColaborador.data?.dados || responseColaborador.data;
+
+      // Se a API retornou o colaborador atualizado, usamos a string de empresas dele, senão usamos o fallback do 'item'
+      const stringEmpresas =
+        colaboradorAtualizado?.empresas ?? item.empresas ?? "";
+
+      const ids = stringEmpresas
         .split(",")
-        .map((value) => value.trim())
+        .map((value: string) => value.trim())
         .filter(Boolean)
         .map(Number);
 
       setEmpresasIdsVinculadas(ids);
-      const vinculadas = empresas
+
+      const vinculadas = listaEmpresas
         .filter((empresa: EmpresaOption) =>
           ids.includes(Number(empresa.id_empresa)),
         )
         .map((empresa: EmpresaOption) => empresa.nome);
 
       setEmpresasVinculadas(vinculadas);
-      setEmpresas(empresas);
+      setIsEmpresasModalOpen(true);
     } catch (error) {
-      console.error("Erro ao carregar empresas do colaborador:", error);
+      console.error(
+        "Erro ao carregar dados atualizados do colaborador:",
+        error,
+      );
       showToast({
         type: "error",
-        message: "Não foi possível carregar as empresas do colaborador.",
+        message:
+          "Não foi possível carregar as empresas atualizadas do colaborador.",
       });
     } finally {
-      setIsEmpresasModalOpen(true);
+      setLoading(false);
     }
   };
 
@@ -138,7 +163,6 @@ export function DataTableColaboradores({
         const { data } = await apiFetch.get("/api/empresas");
         const lista = Array.isArray(data?.dados) ? data.dados : [];
         setEmpresas(lista);
-
         setIdEmpresa("");
       } catch (error) {
         console.error("Erro ao carregar empresas:", error);
@@ -163,6 +187,7 @@ export function DataTableColaboradores({
         id_empresa: Number(idEmpresa),
         id_colaborador: Number(colaboradorSelecionado.id_colaborador),
       });
+
       showToast({
         type: "success",
         message: "Empresa vinculada com sucesso!",
@@ -179,19 +204,13 @@ export function DataTableColaboradores({
       }
 
       setIdEmpresa("");
-    } catch (error) {
+
+      if (onAtualizarDados) onAtualizarDados();
+    } catch (error: any) {
       console.error("Erro ao vincular empresa:", error);
       const errorMessage =
-        (
-          error as {
-            response?: { data?: { message?: string; mensagem?: string } };
-          }
-        )?.response?.data?.message ||
-        (
-          error as {
-            response?: { data?: { message?: string; mensagem?: string } };
-          }
-        )?.response?.data?.mensagem ||
+        error?.response?.data?.message ||
+        error?.response?.data?.mensagem ||
         "Não foi possível vincular a empresa.";
       showToast({ type: "error", message: errorMessage });
     } finally {
@@ -207,6 +226,7 @@ export function DataTableColaboradores({
         id_empresa: idEmpresaRemover,
         id_colaborador: Number(colaboradorSelecionado.id_colaborador),
       });
+
       showToast({
         type: "success",
         message: "Empresa removida com sucesso!",
@@ -218,19 +238,13 @@ export function DataTableColaboradores({
         prev.filter((id) => id !== idEmpresaRemover),
       );
       setEmpresasVinculadas((prev) => prev.filter((_, i) => i !== index));
-    } catch (error) {
+
+      if (onAtualizarDados) onAtualizarDados();
+    } catch (error: any) {
       console.error("Erro ao remover empresa:", error);
       const errorMessage =
-        (
-          error as {
-            response?: { data?: { message?: string; mensagem?: string } };
-          }
-        )?.response?.data?.message ||
-        (
-          error as {
-            response?: { data?: { message?: string; mensagem?: string } };
-          }
-        )?.response?.data?.mensagem ||
+        error?.response?.data?.message ||
+        error?.response?.data?.mensagem ||
         "Não foi possível remover a empresa.";
       showToast({ type: "error", message: errorMessage });
     }
@@ -250,7 +264,6 @@ export function DataTableColaboradores({
         size="semi-full"
       >
         <div className="flex h-full w-full flex-col gap-4">
-          {/* Linha de Adicionar */}
           <form
             onSubmit={handleAdicionarEmpresa}
             className="flex w-full items-center gap-2"
@@ -279,7 +292,6 @@ export function DataTableColaboradores({
             </Button>
           </form>
 
-          {/* Lista de Empresas */}
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             {empresasVinculadas.length > 0 ? (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
