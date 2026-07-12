@@ -14,7 +14,7 @@ interface Empresa {
 interface DataTableEmpresasProps {
   dados: Empresa[];
   onEditar: (item: Empresa) => void;
-  onEliminar: (id: Empresa) => void;
+  onEliminar: (item: Empresa) => void;
 }
 
 export function DataTableEmpresas({
@@ -28,7 +28,6 @@ export function DataTableEmpresas({
     {
       header: "Criada em",
       accessorKey: "created_at",
-      // Opcional: você pode formatar a data aqui se necessário
       cell: (item) => new Date(item.created_at).toLocaleDateString("pt-BR"),
     },
     {

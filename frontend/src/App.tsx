@@ -13,6 +13,7 @@ import Logout from "./pages/auth/Logout";
 import CadastrarCliente from "./pages/auth/cadastro/CadastrarCliente";
 import PaginaDashBoards from "./pages/admin/Dashboards";
 import PaginaEmpresas from "./pages/admin/Empresas";
+import PaginaColaboradores from "./pages/admin/Colaboradores";
 
 export default function App() {
   return (
@@ -70,6 +71,16 @@ export default function App() {
               <ProtectedRouteColaborador>
                 <PageTitle title="Admin - Empresa">
                   <PaginaEmpresas />
+                </PageTitle>
+              </ProtectedRouteColaborador>
+            }
+          />
+          <Route
+            path="/admin/colaboradores"
+            element={
+              <ProtectedRouteColaborador>
+                <PageTitle title="Admin - Colaborador">
+                  <PaginaColaboradores />
                 </PageTitle>
               </ProtectedRouteColaborador>
             }

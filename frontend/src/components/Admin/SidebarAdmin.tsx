@@ -7,12 +7,14 @@ import { motion, AnimatePresence } from "framer-motion";
 interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  activePage: "dashboard" | "empresas" | string;
+  activePage: "dashboard" | "empresas" | "colaboradores" | string;
 }
 
 export const SidebarAdmin = ({ isOpen, activePage }: SidebarProps) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(
-    activePage === "empresas" ? "configuracoes" : null,
+    activePage === "empresas" || activePage === "colaboradores"
+      ? "configuracoes"
+      : null,
   );
 
   return (
@@ -42,12 +44,17 @@ export const SidebarAdmin = ({ isOpen, activePage }: SidebarProps) => {
               activeMenu === "configuracoes" ? null : "configuracoes",
             )
           }
-          isActive={activePage === "empresas"}
+          isActive={activePage == "colaboradores" || "colaboradores"}
         >
           <SubItem
             label="Empresas"
             href="/admin/empresas"
             active={activePage === "empresas"}
+          />
+          <SubItem
+            label="Colaboradores"
+            href="/admin/colaboradores"
+            active={activePage === "colaboradores"}
           />
         </AccordionMenu>
       </nav>

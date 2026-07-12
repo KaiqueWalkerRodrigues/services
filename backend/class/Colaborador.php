@@ -56,7 +56,7 @@ class Colaborador
         }
     }
 
-    public function editar($id_colaborador, $nome, $login, $senha = null)
+    public function editar($id_colaborador, $nome, $login, $senha = null, $id_empresa = null)
     {
         try {
             if ($senha) {
@@ -82,7 +82,18 @@ class Colaborador
 
             $stmt->execute();
 
-            if ($stmt->rowCount() > 0) {
+            if ($id_empresa !== null && $id_empresa !== '') {
+                $stmtDelete = $this->pdo->prepare("DELETE FROM colaboradores_empresas WHERE id_colaborador = :id_colaborador");
+                $stmtDelete->bindParam(':id_colaborador', $id_colaborador);
+                $stmtDelete->execute();
+
+                $stmtInsert = $this->pdo->prepare("INSERT INTO colaboradores_empresas (id_empresa, id_colaborador, created_at) VALUES (:id_empresa, :id_colaborador, NOW())");
+                $stmtInsert->bindParam(':id_empresa', $id_empresa);
+                $stmtInsert->bindParam(':id_colaborador', $id_colaborador);
+                $stmtInsert->execute();
+            }
+
+            if ($stmt->rowCount() > 0 || ($id_empresa !== null && $id_empresa !== '')) {
                 return ['status' => 'sucesso', 'mensagem' => 'Colaborador atualizado com sucesso!'];
             } else {
                 return ['status' => 'erro', 'mensagem' => 'Colaborador não encontrado ou não houve alterações.'];
@@ -115,8 +126,12 @@ class Colaborador
     public function listar()
     {
         try {
-            $sql = "SELECT id_colaborador, nome, login, created_at, updated_at 
-                    FROM colaboradores WHERE deleted_at IS NULL";
+            $sql = "SELECT c.id_colaborador, c.nome, c.login, c.created_at, c.updated_at, 
+                    GROUP_CONCAT(ce.id_empresa) AS empresas
+                FROM colaboradores c
+                LEFT JOIN colaboradores_empresas ce ON ce.id_colaborador = c.id_colaborador
+                WHERE c.deleted_at IS NULL
+                GROUP BY c.id_colaborador";
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute();
@@ -136,9 +151,14 @@ class Colaborador
     public function mostrar($id_colaborador)
     {
         try {
-            $sql = "SELECT id_colaborador, nome, login, created_at, updated_at 
-                    FROM colaboradores 
-                    WHERE id_colaborador = :id_colaborador AND deleted_at IS NULL";
+            $sql = "SELECT c.id_colaborador, c.nome, c.login, c.created_at, c.updated_at, ce.id_empresa 
+                    FROM colaboradores c
+                    LEFT JOIN (
+                        SELECT id_colaborador, MAX(id_empresa) AS id_empresa
+                        FROM colaboradores_empresas
+                        GROUP BY id_colaborador
+                    ) ce ON ce.id_colaborador = c.id_colaborador
+                    WHERE c.id_colaborador = :id_colaborador AND c.deleted_at IS NULL";
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindParam(':id_colaborador', $id_colaborador);

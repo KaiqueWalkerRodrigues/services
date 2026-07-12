@@ -41,7 +41,7 @@ switch ($metodo) {
 
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
-        echo json_encode($colaborador->editar($data->id_colaborador, $data->nome, $data->login, $data->senha ?? null));
+        echo json_encode($colaborador->editar($data->id_colaborador, $data->nome, $data->login, $data->senha ?? null, $data->id_empresa ?? null));
         break;
 
     case 'DELETE':
