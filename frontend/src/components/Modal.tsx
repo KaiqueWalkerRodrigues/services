@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { X, Trash2 } from "lucide-react";
 
-type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
+type ModalSize = "sm" | "md" | "lg" | "xl" | "semi-full" | "full";
 type ModalVariant = "default" | "delete";
 
 interface ModalProps {
@@ -19,6 +19,7 @@ const sizeClasses: Record<ModalSize, string> = {
   md: "max-w-lg",
   lg: "max-w-2xl",
   xl: "max-w-4xl",
+  "semi-full": "max-w-[85%] h-[85vh]",
   full: "max-w-[95%] h-[95vh]",
 };
 

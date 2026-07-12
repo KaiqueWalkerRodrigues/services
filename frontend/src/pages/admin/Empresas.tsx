@@ -8,6 +8,8 @@ import apiFetch from "../../config/apiFetch";
 import { CadastrarEmpresaModal } from "../../components/Modal/CadastrarEmpresaModal";
 import { EditarEmpresaModal } from "../../components/Modal/EditarEmpresaModal";
 import { DeletarEmpresaModal } from "../../components/Modal/DeletarEmpresaModal";
+import { EditarColaboradorModal } from "../../components/Modal/EditarColaboradorModal";
+import { DeletarColaboradorModal } from "../../components/Modal/DeletarColaboradorModal";
 
 export default function PaginaEmpresas() {
   const [empresas, setEmpresas] = useState<any[]>([]);
@@ -18,6 +20,17 @@ export default function PaginaEmpresas() {
   const [isEditarOpen, setIsEditarOpen] = useState(false);
   const [isDeletarOpen, setIsDeletarOpen] = useState(false);
   const [empresaSelecionada, setEmpresaSelecionada] = useState<any>(null);
+
+  // Reaproveitando os mesmos modais de colaborador usados em PaginaColaboradores
+  const [isEditarColaboradorOpen, setIsEditarColaboradorOpen] = useState(false);
+  const [isDeletarColaboradorOpen, setIsDeletarColaboradorOpen] =
+    useState(false);
+  const [colaboradorSelecionado, setColaboradorSelecionado] =
+    useState<any>(null);
+
+  // Incrementado sempre que um colaborador é editado/excluído com sucesso,
+  // para avisar o DataTableEmpresas que ele deve recarregar a lista do modal.
+  const [colaboradoresRefreshKey, setColaboradoresRefreshKey] = useState(0);
 
   const carregarEmpresas = useCallback(async () => {
     try {
@@ -54,6 +67,21 @@ export default function PaginaEmpresas() {
     setIsDeletarOpen(true);
   };
 
+  const handleEditarColaborador = (colaborador: any) => {
+    setColaboradorSelecionado(colaborador);
+    setIsEditarColaboradorOpen(true);
+  };
+
+  const handleEliminarColaborador = (colaborador: any) => {
+    setColaboradorSelecionado(colaborador);
+    setIsDeletarColaboradorOpen(true);
+  };
+
+  const handleColaboradorAtualizado = () => {
+    // Avisa o DataTableEmpresas para recarregar a lista de colaboradores do modal aberto
+    setColaboradoresRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <div className="flex h-screen bg-[#0a0a0a] text-white">
       <SidebarAdmin
@@ -80,6 +108,9 @@ export default function PaginaEmpresas() {
               dados={empresas}
               onEditar={handleEditar}
               onEliminar={handleEliminar}
+              onEditarColaborador={handleEditarColaborador}
+              onEliminarColaborador={handleEliminarColaborador}
+              colaboradoresRefreshKey={colaboradoresRefreshKey}
             />
           )}
         </div>
@@ -112,6 +143,34 @@ export default function PaginaEmpresas() {
           }}
           onSuccess={carregarEmpresas}
           empresa={empresaSelecionada}
+        />
+      )}
+
+      {colaboradorSelecionado && (
+        <EditarColaboradorModal
+          isOpen={isEditarColaboradorOpen}
+          onClose={() => {
+            setIsEditarColaboradorOpen(false);
+            setColaboradorSelecionado(null);
+          }}
+          onSuccess={() => {
+            handleColaboradorAtualizado();
+          }}
+          colaborador={colaboradorSelecionado}
+        />
+      )}
+
+      {colaboradorSelecionado && isDeletarColaboradorOpen && (
+        <DeletarColaboradorModal
+          isOpen={isDeletarColaboradorOpen}
+          onClose={() => {
+            setIsDeletarColaboradorOpen(false);
+            setColaboradorSelecionado(null);
+          }}
+          onSuccess={() => {
+            handleColaboradorAtualizado();
+          }}
+          colaborador={colaboradorSelecionado}
         />
       )}
     </div>

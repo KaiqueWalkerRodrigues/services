@@ -36,8 +36,17 @@ switch ($metodo) {
 
     case 'POST':
         $data = json_decode(file_get_contents("php://input"));
-        echo json_encode($colaborador->cadastrar($data->id_empresa, $data->nome, $data->login, $data->senha));
+        $subpath = $_SERVER['API_SUBPATH'] ?? '';
+
+        if ($subpath === 'adicionarEmpresa' && isset($data->id_empresa) && isset($data->id_colaborador)) {
+            echo json_encode($colaborador->adicionarEmpresa($data->id_colaborador, $data->id_empresa));
+        } elseif ($subpath === 'removerEmpresa' && isset($data->id_empresa) && isset($data->id_colaborador)) {
+            echo json_encode($colaborador->removerEmpresa($data->id_colaborador, $data->id_empresa));
+        } else {
+            echo json_encode($colaborador->cadastrar($data->id_empresa, $data->nome, $data->login, $data->senha));
+        }
         break;
+
 
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));

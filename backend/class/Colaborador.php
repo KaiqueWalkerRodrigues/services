@@ -123,6 +123,44 @@ class Colaborador
         }
     }
 
+    public function adicionarEmpresa($id_colaborador, $id_empresa)
+    {
+        try {
+            $sql = "INSERT INTO colaboradores_empresas (id_empresa, id_colaborador, created_at) 
+                    VALUES (:id_empresa, :id_colaborador, NOW())";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_empresa', $id_empresa);
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+            $stmt->execute();
+
+            return ['status' => 'sucesso', 'mensagem' => 'Empresa vinculada com sucesso!'];
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return ['status' => 'erro', 'mensagem' => 'Erro ao vincular empresa: ' . $e->getMessage()];
+        }
+    }
+
+    public function removerEmpresa($id_colaborador, $id_empresa)
+    {
+        try {
+            $sql = "DELETE FROM colaboradores_empresas 
+                    WHERE id_colaborador = :id_colaborador AND id_empresa = :id_empresa";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+            $stmt->bindParam(':id_empresa', $id_empresa);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                return ['status' => 'sucesso', 'mensagem' => 'Empresa removida com sucesso!'];
+            }
+
+            return ['status' => 'erro', 'mensagem' => 'Vínculo não encontrado.'];
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return ['status' => 'erro', 'mensagem' => 'Erro ao remover empresa: ' . $e->getMessage()];
+        }
+    }
+
     public function listar()
     {
         try {

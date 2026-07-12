@@ -67,7 +67,7 @@ export default function PaginaColaboradores() {
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h2 className="text-2xl font-bold">Colaboradores</h2>
+              <h2 className="text-2xl font-bold">Todos Colaboradores</h2>
             </div>
             <Button color="success" onClick={() => setIsCadastrarOpen(true)}>
               + Novo Colaborador
@@ -81,6 +81,8 @@ export default function PaginaColaboradores() {
               dados={colaboradores}
               onEditar={handleEditar}
               onEliminar={handleEliminar}
+              isOpen={true}
+              onRefresh={carregarColaboradores}
             />
           )}
         </div>
