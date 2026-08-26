@@ -284,4 +284,48 @@ class Cliente
             return false;
         }
     }
+
+    public function listarPorEmpresa($id_empresa)
+    {
+        try {
+            $sql = "SELECT 
+                    c.id_cliente,
+                    c.nome,
+                    c.email,
+                    c.celular,
+                    c.created_at,
+                    c.updated_at
+                FROM clientes c
+                INNER JOIN clientes_empresas ce 
+                    ON ce.id_cliente = c.id_cliente
+                WHERE ce.id_empresa = :id_empresa
+                  AND c.deleted_at IS NULL
+                  AND ce.deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_empresa', $id_empresa, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $dados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($dados) {
+                return [
+                    'status' => 'sucesso',
+                    'dados' => $dados
+                ];
+            } else {
+                return [
+                    'status' => 'erro',
+                    'mensagem' => 'Clientes não encontrados.'
+                ];
+            }
+        } catch (PDOException $e) {
+            http_response_code(500);
+
+            return [
+                'status' => 'erro',
+                'mensagem' => 'Erro ao buscar clientes: ' . $e->getMessage()
+            ];
+        }
+    }
 }

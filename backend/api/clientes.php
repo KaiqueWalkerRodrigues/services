@@ -62,6 +62,16 @@ switch ($metodo) {
             break;
         }
 
+        if ($apiSubpath === 'listarPorEmpresa') {
+            if (!isset($_GET['empresa'])) {
+                http_response_code(400);
+                echo json_encode(["mensagem" => "Parâmetro empresa é obrigatório"]);
+                break;
+            }
+            echo json_encode(['exists' => $cliente->listarPorEmpresa($_GET['empresa'])]);
+            break;
+        }
+
         if ($_GET == null) {
             if ($loginValido) {
                 echo json_encode($cliente->listar());
