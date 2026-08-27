@@ -522,8 +522,7 @@ class Colaborador
             // Buscamos diretamente na tabela de relacionamento
             $sql = "SELECT DISTINCT id_empresa 
                     FROM colaboradores_empresas 
-                    WHERE id_colaborador = :id_colaborador 
-                    AND deleted_at IS NULL";
+                    WHERE id_colaborador = :id_colaborador";
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindParam(':id_colaborador', $id_colaborador, PDO::PARAM_INT);

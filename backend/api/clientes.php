@@ -68,7 +68,12 @@ switch ($metodo) {
                 echo json_encode(["mensagem" => "Parâmetro empresa é obrigatório"]);
                 break;
             }
-            echo json_encode(['exists' => $cliente->listarPorEmpresa($_GET['empresa'])]);
+            if ($loginValido) {
+                echo json_encode(['exists' => $cliente->listarPorEmpresa($_GET['empresa'])]);
+            } else {
+                http_response_code(401);
+                echo json_encode(["mensagem" => "Não autorizado"]);
+            }
             break;
         }
 

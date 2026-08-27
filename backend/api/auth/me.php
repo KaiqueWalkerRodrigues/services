@@ -38,6 +38,7 @@ $dadosResposta = [
     "is_sa" => (bool) ($payload['is_sa'] ?? false),
     "grupos" => $payload['grupos'] ?? [],
     "permissoes" => $payload['permissoes'] ?? [],
+    "id_empresa" => $payload['id_empresa'] ?? [],
     "empresas_acesso" => $payload['empresas_acesso'] ?? []
 ];
 

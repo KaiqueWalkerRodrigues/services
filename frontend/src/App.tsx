@@ -6,14 +6,14 @@ import { ProtectedRouteColaborador } from "./components/ProtectedRouteColaborado
 import { ProtectedRouteCliente } from "./components/ProtectedRouteCliente";
 
 import HomeCliente from "./pages/HomeCliente";
-import HomeColaborador from "./pages/Colaborador/HomeColaborador";
+import HomeColaborador from "./pages/colaborador/HomeColaborador";
 import LoginCliente from "./pages/auth/LoginCliente";
 import LoginColaborador from "./pages/auth/LoginColaborador";
 import Logout from "./pages/auth/Logout";
 import CadastrarCliente from "./pages/auth/cadastro/CadastrarCliente";
 import PaginaDashBoards from "./pages/admin/Dashboards";
 import PaginaEmpresas from "./pages/admin/Empresas";
-import PaginaColaboradorCliente from "./pages/Colaborador/gerenciamento/Clientes";
+import PaginaColaboradorCliente from "./pages/colaborador/gerenciamento/Clientes";
 import PaginaColaboradores from "./pages/admin/Colaboradores";
 
 export default function App() {

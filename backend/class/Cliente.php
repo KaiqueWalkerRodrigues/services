@@ -288,7 +288,7 @@ class Cliente
     public function listarPorEmpresa($id_empresa)
     {
         try {
-            $sql = "SELECT 
+            $sql = "SELECT DISTINCT
                     c.id_cliente,
                     c.nome,
                     c.email,

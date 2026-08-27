@@ -39,6 +39,7 @@ if (!empty($dados->login) && !empty($dados->senha)) {
             'is_sa' => (bool)$is_sa,
             'grupos' => $ids_grupos,
             'permissoes' => $permissoes,
+            'id_empresa' => $dados->id_empresa,
             'empresas_acesso' => $empresas_acesso,
             'exp' => time() + (10 * 60)
         ];
