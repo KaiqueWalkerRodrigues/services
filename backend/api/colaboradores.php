@@ -23,22 +23,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 global $dadosUsuario;
 
 $metodo = $_SERVER['REQUEST_METHOD'];
+$subpath = $_SERVER['API_SUBPATH'] ?? '';
+
+$loginValido = (bool) $dadosUsuario;
 
 // 2. Lógica da API protegida
 $colaborador = new Colaborador();
 
 switch ($metodo) {
     case 'GET':
-        if (isset($_GET['id'])) {
-            echo json_encode($colaborador->mostrar($_GET['id']));
+        if ($subpath === 'listarPorEmpresa') {
+            if (!isset($_GET['empresa'])) {
+                http_response_code(400);
+                echo json_encode(["mensagem" => "Parâmetro empresa é obrigatório"]);
+            }
+            if ($loginValido) {
+                echo json_encode(['exists' => $colaborador->listarPorEmpresa($_GET['empresa'])]);
+            } else {
+                http_response_code(401);
+                echo json_encode(["mensagem" => "Não autorizado"]);
+            }
+            break;
         } else {
-            echo json_encode($colaborador->listar());
+            if (isset($_GET['id'])) {
+                echo json_encode($colaborador->mostrar($_GET['id']));
+            } else {
+                echo json_encode($colaborador->listar());
+            }
         }
         break;
 
     case 'POST':
         $data = json_decode(file_get_contents("php://input"));
-        $subpath = $_SERVER['API_SUBPATH'] ?? '';
 
         if ($subpath === 'adicionarEmpresa' && isset($data->id_empresa) && isset($data->id_colaborador)) {
             echo json_encode($colaborador->adicionarEmpresa($data->id_colaborador, $data->id_empresa));
@@ -51,7 +67,6 @@ switch ($metodo) {
 
     case 'PATCH':
         $data = json_decode(file_get_contents("php://input"));
-        $subpath = $_SERVER['API_SUBPATH'] ?? '';
 
         if ($subpath === 'trocarSenhaAdmin') {
             if (!eSuperAdmin($dadosUsuario)) {

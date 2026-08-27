@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require("api/api.php");
 
 $metodo = $_SERVER['REQUEST_METHOD'];
-$apiSubpath = $_SERVER['API_SUBPATH'] ?? '';
+$subpath = $_SERVER['API_SUBPATH'] ?? '';
 
 $token = AuthHelper::obterTokenJwt();
 $dadosUsuario = $token ? AuthHelper::validarToken($token) : false;
@@ -42,7 +42,7 @@ switch ($metodo) {
             break;
         }
 
-        if ($apiSubpath === 'verificar-email') {
+        if ($subpath === 'verificar-email') {
             if (!isset($_GET['email'])) {
                 http_response_code(400);
                 echo json_encode(["mensagem" => "Parâmetro email é obrigatório"]);
@@ -52,7 +52,7 @@ switch ($metodo) {
             break;
         }
 
-        if ($apiSubpath === 'verificar-celular') {
+        if ($subpath === 'verificar-celular') {
             if (!isset($_GET['celular'])) {
                 http_response_code(400);
                 echo json_encode(["mensagem" => "Parâmetro celular é obrigatório"]);
@@ -62,7 +62,7 @@ switch ($metodo) {
             break;
         }
 
-        if ($apiSubpath === 'listarPorEmpresa') {
+        if ($subpath === 'listarPorEmpresa') {
             if (!isset($_GET['empresa'])) {
                 http_response_code(400);
                 echo json_encode(["mensagem" => "Parâmetro empresa é obrigatório"]);
@@ -98,7 +98,8 @@ switch ($metodo) {
             $data->nome,
             $data->email,
             $data->senha,
-            $data->celular ?? null
+            $data->celular ?? null,
+            $data->id_empresa ?? null
         ));
         break;
 

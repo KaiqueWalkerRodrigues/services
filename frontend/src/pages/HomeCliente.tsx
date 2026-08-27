@@ -5,7 +5,9 @@ export default function HomeColaborador() {
 
   return (
     <div>
-      <p>{/* Bem-vindo, {usuario?.nome} #{usuario?.id_cliente} */}</p>
+      <p>
+        Bem-vindo, {usuario?.nome} #{usuario?.id_cliente}
+      </p>
       <button onClick={logout}>Sair</button>
     </div>
   );

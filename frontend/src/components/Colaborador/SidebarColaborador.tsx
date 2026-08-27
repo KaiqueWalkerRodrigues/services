@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutGrid,
-  CalendarDays,
   Crown,
   UserCircle2,
   Zap,
@@ -11,6 +10,7 @@ import {
   FolderOpen,
   House,
   Menu,
+  UserRoundCog,
   X,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
@@ -35,6 +35,11 @@ const hubItems: NavItemType[] = [
     icon: Folder,
     children: [
       { label: "Clientes", to: "/gerenciamento/clientes", icon: UserCircle2 },
+      {
+        label: "Colaboradores",
+        to: "/gerenciamento/Colaboradores",
+        icon: UserRoundCog,
+      },
       { label: "Serviços", to: "/servicos", icon: Crown },
     ],
   },
@@ -88,7 +93,6 @@ function PastaNav({
 }) {
   const location = useLocation();
 
-  // Função auxiliar para verificar se alguma rota filha está ativa
   const contemRotaAtiva = (filhos: NavItemType[]): boolean => {
     return filhos.some((filho) => {
       if (filho.to && location.pathname === filho.to) return true;
@@ -98,11 +102,8 @@ function PastaNav({
   };
 
   const isAtivo = item.children ? contemRotaAtiva(item.children) : false;
-
-  // Mantém a pasta aberta se ela contiver a rota ativa
   const [isOpen, setIsOpen] = useState(isAtivo);
 
-  // Garante que se a rota mudar por navegação externa, a pasta se ajuste
   useEffect(() => {
     if (isAtivo) {
       setIsOpen(true);
@@ -203,7 +204,7 @@ export function Sidebar({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-64 shrink-0 flex-col justify-between border-r border-white/5 bg-[#09090f] px-5 py-6 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-64 shrink-0 flex-col justify-between border-r border-white/5 bg-[#09090f] px-5 py-6 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           isOpenMobile ? "translate-x-0" : "-translate-x-full"
         }`}
       >

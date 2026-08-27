@@ -49,7 +49,8 @@ export default function HomeColaborador() {
     <div className="flex min-h-screen bg-[#07070b] text-zinc-100">
       <Sidebar />
 
-      <main className="flex-1 px-10 py-8">
+      {/* Adicionado 'lg:ml-64' para empurrar o conteúdo para a direita no desktop, abrindo espaço para a sidebar fixa */}
+      <main className="flex-1 px-10 py-8 lg:ml-64">
         {/* Cabeçalho */}
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>

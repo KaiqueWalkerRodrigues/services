@@ -13,7 +13,8 @@ import Logout from "./pages/auth/Logout";
 import CadastrarCliente from "./pages/auth/cadastro/CadastrarCliente";
 import PaginaDashBoards from "./pages/admin/Dashboards";
 import PaginaEmpresas from "./pages/admin/Empresas";
-import PaginaColaboradorCliente from "./pages/colaborador/gerenciamento/Clientes";
+import PaginaColaboradorClientes from "./pages/colaborador/gerenciamento/Clientes";
+import PaginaColaboradorColaboradores from "./pages/colaborador/gerenciamento/Colaboradores";
 import PaginaColaboradores from "./pages/admin/Colaboradores";
 
 export default function App() {
@@ -60,7 +61,18 @@ export default function App() {
             element={
               <ProtectedRouteColaborador>
                 <PageTitle title="Clientes">
-                  <PaginaColaboradorCliente />
+                  <PaginaColaboradorClientes />
+                </PageTitle>
+              </ProtectedRouteColaborador>
+            }
+          />
+
+          <Route
+            path="/gerenciamento/colaboradores"
+            element={
+              <ProtectedRouteColaborador>
+                <PageTitle title="Colaboradores">
+                  <PaginaColaboradorColaboradores />
                 </PageTitle>
               </ProtectedRouteColaborador>
             }

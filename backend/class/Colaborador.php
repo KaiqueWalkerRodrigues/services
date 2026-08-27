@@ -538,4 +538,51 @@ class Colaborador
             return [];
         }
     }
+
+    public function listarPorEmpresa($id_empresa)
+    {
+        try {
+            $sql = "SELECT 
+                    c.id_colaborador,
+                    c.nome,
+                    c.login,
+                    c.created_at,
+                    c.updated_at,
+                    GROUP_CONCAT(DISTINCT ce.id_empresa) AS empresas
+                FROM colaboradores c
+                INNER JOIN colaboradores_empresas ce 
+                    ON ce.id_colaborador = c.id_colaborador
+                WHERE c.deleted_at IS NULL
+                  AND ce.id_empresa = :id_empresa
+                GROUP BY c.id_colaborador";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':id_empresa', $id_empresa, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $dados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($dados) {
+                return [
+                    'status' => 'sucesso',
+                    'total' => count($dados),
+                    'dados' => $dados
+                ];
+            }
+
+            return [
+                'status' => 'sucesso',
+                'total' => 0,
+                'dados' => [],
+                'mensagem' => 'Nenhum colaborador encontrado para esta empresa.'
+            ];
+        } catch (PDOException $e) {
+            http_response_code(500);
+
+            return [
+                'status' => 'erro',
+                'mensagem' => 'Erro ao buscar os colaboradores: ' . $e->getMessage()
+            ];
+        }
+    }
 }

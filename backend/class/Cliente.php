@@ -15,7 +15,7 @@ class Cliente
         }
     }
 
-    public function cadastrar($nome, $email, $senha, $celular = null)
+    public function cadastrar($nome, $email, $senha, $celular = null, $id_empresa = null)
     {
         try {
             $sql = "INSERT INTO clientes (nome, email, senha, celular, created_at, updated_at) 
@@ -32,10 +32,23 @@ class Cliente
 
             $stmt->execute();
 
+            $id_cliente = $this->pdo->lastInsertId();
+
+            if ($id_empresa > 0) {
+                $sql = "INSERT INTO clientes_empresas (id_cliente, id_empresa, created_at, updated_at) 
+                    VALUES (:id_cliente, :id_empresa, NOW(), NOW())";
+                $stmt = $this->pdo->prepare($sql);
+
+                $stmt->bindParam(':id_cliente', $id_cliente);
+                $stmt->bindParam(':id_empresa', $id_empresa);
+
+                $stmt->execute();
+            }
+
             return [
                 'status' => 'sucesso',
                 'mensagem' => 'Cliente cadastrado com sucesso!',
-                'id' => $this->pdo->lastInsertId()
+                'id' => $id_cliente
             ];
         } catch (PDOException $e) {
             http_response_code(500);
