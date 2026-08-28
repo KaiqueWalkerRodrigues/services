@@ -13,6 +13,7 @@ import {
   UserRoundCog,
   NotepadText,
   X,
+  Cog,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -42,6 +43,11 @@ const hubItems: NavItemType[] = [
     label: "Parametros",
     icon: Folder,
     children: [
+      {
+        label: "Gerais",
+        to: "/parametros/gerais",
+        icon: Cog,
+      },
       {
         label: "Colaboradores",
         to: "/parametros/Colaboradores",

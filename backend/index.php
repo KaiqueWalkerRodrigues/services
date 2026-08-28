@@ -145,6 +145,16 @@ $rotas = [
         ],
         'permissoes' => null
     ],
+
+    // servicos
+    'api/parametros-empresas' => [
+        'file' => 'parametrosEmpresas.php',
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+        ],
+        'permissoes' => null
+    ],
 ];
 
 // 3. Processamento da Rota
