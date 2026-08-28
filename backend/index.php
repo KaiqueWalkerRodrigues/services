@@ -119,6 +119,19 @@ $rotas = [
         ],
         'permissoes' => null
     ],
+
+    // filiais
+    'api/filiais' => [
+        'file' => 'filiais.php',
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+            'DELETE' => true,
+            'POST' => true,
+            'default' => true
+        ],
+        'permissoes' => null
+    ],
 ];
 
 // 3. Processamento da Rota

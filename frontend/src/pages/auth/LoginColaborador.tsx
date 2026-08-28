@@ -5,7 +5,6 @@ import toast, { Toaster } from "react-hot-toast";
 import { realizarLoginEmpresa } from "../../api/auth";
 import apiFetch from "../../config/apiFetch";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../../config/api";
 
 export default function LoginColaborador() {
   const [codigo, setCodigo] = useState("");

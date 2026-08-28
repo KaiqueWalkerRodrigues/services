@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { type ReactNode } from "react";
 import { type Usuario } from "../types/auth";
 import { Outlet, useNavigate } from "react-router-dom";
 import apiFetch from "../config/apiFetch";
 import { AuthContext } from "./AuthContext";
 
-export function AuthProvider() {
+export function AuthProvider({ children }: { children?: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [carregando, setCarregando] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -86,7 +87,7 @@ export function AuthProvider() {
         logout: deslogar,
       }}
     >
-      <Outlet />
+      {children ?? <Outlet />}
     </AuthContext.Provider>
   );
 }

@@ -16,6 +16,7 @@ import PaginaEmpresas from "./pages/admin/Empresas";
 import PaginaColaboradorClientes from "./pages/colaborador/gerenciamento/Clientes";
 import PaginaColaboradorColaboradores from "./pages/colaborador/gerenciamento/Colaboradores";
 import PaginaColaboradores from "./pages/admin/Colaboradores";
+import PaginaColaboradorFilial from "./pages/colaborador/parametros/Filiais";
 
 export default function App() {
   return (
@@ -27,9 +28,11 @@ export default function App() {
         <Route
           path="/loginColaborador"
           element={
-            <PageTitle title="Login Colaborador">
-              <LoginColaborador />
-            </PageTitle>
+            <AuthProvider>
+              <PageTitle title="Login Colaborador">
+                <LoginColaborador />
+              </PageTitle>
+            </AuthProvider>
           }
         />
         <Route
@@ -73,6 +76,17 @@ export default function App() {
               <ProtectedRouteColaborador>
                 <PageTitle title="Colaboradores">
                   <PaginaColaboradorColaboradores />
+                </PageTitle>
+              </ProtectedRouteColaborador>
+            }
+          />
+
+          <Route
+            path="/parametros/filiais"
+            element={
+              <ProtectedRouteColaborador>
+                <PageTitle title="Filiais">
+                  <PaginaColaboradorFilial />
                 </PageTitle>
               </ProtectedRouteColaborador>
             }

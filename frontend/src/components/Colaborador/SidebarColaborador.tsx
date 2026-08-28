@@ -11,6 +11,7 @@ import {
   House,
   Menu,
   UserRoundCog,
+  NotepadText,
   X,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
@@ -35,11 +36,18 @@ const hubItems: NavItemType[] = [
     icon: Folder,
     children: [
       { label: "Clientes", to: "/gerenciamento/clientes", icon: UserCircle2 },
+    ],
+  },
+  {
+    label: "Parametros",
+    icon: Folder,
+    children: [
       {
         label: "Colaboradores",
         to: "/gerenciamento/Colaboradores",
         icon: UserRoundCog,
       },
+      { label: "Filiais", to: "/parametros/filiais", icon: NotepadText },
       { label: "Serviços", to: "/servicos", icon: Crown },
     ],
   },
