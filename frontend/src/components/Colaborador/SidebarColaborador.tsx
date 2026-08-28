@@ -44,11 +44,11 @@ const hubItems: NavItemType[] = [
     children: [
       {
         label: "Colaboradores",
-        to: "/gerenciamento/Colaboradores",
+        to: "/parametros/Colaboradores",
         icon: UserRoundCog,
       },
       { label: "Filiais", to: "/parametros/filiais", icon: NotepadText },
-      { label: "Serviços", to: "/servicos", icon: Crown },
+      { label: "Serviços", to: "/parametros/servicos", icon: Crown },
     ],
   },
 ];

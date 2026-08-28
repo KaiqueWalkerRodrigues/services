@@ -222,9 +222,11 @@ export function DataTableColaboradores({
     if (!colaboradorSelecionado) return;
 
     try {
-      await apiFetch.post("/api/colaboradores/removerEmpresa", {
-        id_empresa: idEmpresaRemover,
-        id_colaborador: Number(colaboradorSelecionado.id_colaborador),
+      await apiFetch.delete("/api/colaboradores/removerEmpresa", {
+        data: {
+          id_empresa: idEmpresaRemover,
+          id_colaborador: Number(colaboradorSelecionado.id_colaborador),
+        },
       });
 
       showToast({

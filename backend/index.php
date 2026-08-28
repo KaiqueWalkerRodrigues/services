@@ -132,6 +132,19 @@ $rotas = [
         ],
         'permissoes' => null
     ],
+
+    // servicos
+    'api/servicos' => [
+        'file' => 'servicos.php',
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+            'DELETE' => true,
+            'POST' => true,
+            'default' => true
+        ],
+        'permissoes' => null
+    ],
 ];
 
 // 3. Processamento da Rota

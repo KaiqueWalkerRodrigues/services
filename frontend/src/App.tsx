@@ -14,9 +14,10 @@ import CadastrarCliente from "./pages/auth/cadastro/CadastrarCliente";
 import PaginaDashBoards from "./pages/admin/Dashboards";
 import PaginaEmpresas from "./pages/admin/Empresas";
 import PaginaColaboradorClientes from "./pages/colaborador/gerenciamento/Clientes";
-import PaginaColaboradorColaboradores from "./pages/colaborador/gerenciamento/Colaboradores";
+import PaginaColaboradorColaboradores from "./pages/colaborador/parametros/Colaboradores";
 import PaginaColaboradores from "./pages/admin/Colaboradores";
 import PaginaColaboradorFilial from "./pages/colaborador/parametros/Filiais";
+import PaginaColaboradorServicos from "./pages/colaborador/parametros/Servicos";
 
 export default function App() {
   return (
@@ -71,7 +72,18 @@ export default function App() {
           />
 
           <Route
-            path="/gerenciamento/colaboradores"
+            path="/parametros/servicos"
+            element={
+              <ProtectedRouteColaborador>
+                <PageTitle title="Serviços">
+                  <PaginaColaboradorServicos />
+                </PageTitle>
+              </ProtectedRouteColaborador>
+            }
+          />
+
+          <Route
+            path="/parametros/colaboradores"
             element={
               <ProtectedRouteColaborador>
                 <PageTitle title="Colaboradores">

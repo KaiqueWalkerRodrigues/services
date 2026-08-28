@@ -3,8 +3,7 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import {
-  Building2,
-  MapPin,
+  Wrench,
   Calendar,
   Edit,
   Trash2,
@@ -12,39 +11,38 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  Link2,
 } from "lucide-react";
 
 import apiFetch from "../../config/apiFetch";
-import { EditarFilialModal } from "../Modal/EditarFilialViaColaboradorModal";
-import { DeletarFilialModal } from "../Modal/DeletarFilialViaColaboradorModal";
+import { VincularFiliaisServicoModal } from "../Modal/VincularFiliaisServicoModal";
 
-interface Filial {
+interface Servico {
   id: string;
   nome: string;
-  endereco?: string;
-  bairro?: string;
-  cidade?: string;
-  uf?: string;
+  descricao?: string;
+  peso?: number;
+  valor?: number;
+  preco?: number;
   criadoEm?: string;
 }
 
-interface FilialApi {
-  id_filial?: string | number;
+interface ServicoApi {
+  id_servico?: string | number;
   id?: string | number;
-  id_empresa?: string | number;
   nome?: string;
-  endereco?: string;
-  bairro?: string;
-  cidade?: string;
-  uf?: string;
+  descricao?: string;
+  peso?: number | string;
+  valor?: number | string;
+  preco?: number | string;
   created_at?: string;
   criadoEm?: string;
 }
 
-interface DataTableFiliaisPorEmpresaProps {
+interface DataTableServicosProps {
   empresaId: string | number | undefined;
-  onEditar?: (filial: Filial) => void;
-  onEliminar?: (filial: Filial) => void;
+  onEditar?: (servico: Servico) => void;
+  onEliminar?: (servico: Servico) => void;
   refreshKey?: number;
   itensPorPagina?: number;
 }
@@ -53,14 +51,14 @@ type Ordenacao = "nome-asc" | "nome-desc" | "recente" | "antigo";
 
 const ALTURA_LINHA_PADRAO = 44;
 
-export function DataTableFiliaisPorEmpresa({
+export function DataTableServicos({
   empresaId,
   onEditar,
   onEliminar,
   refreshKey = 0,
   itensPorPagina = 10,
-}: DataTableFiliaisPorEmpresaProps) {
-  const [filiais, setFiliais] = useState<Filial[]>([]);
+}: DataTableServicosProps) {
+  const [servicos, setServicos] = useState<Servico[]>([]);
   const [carregando, setCarregando] = useState(true);
 
   const [busca, setBusca] = useState("");
@@ -68,11 +66,11 @@ export function DataTableFiliaisPorEmpresa({
   const [paginaAtual, setPaginaAtual] = useState(1);
 
   const [internalRefreshKey, setInternalRefreshKey] = useState(0);
-  const [filialEditando, setFilialEditando] = useState<Filial | null>(null);
-  const [modalEditarAberto, setModalEditarAberto] = useState(false);
 
-  const [filialExcluindo, setFilialExcluindo] = useState<Filial | null>(null);
-  const [modalDeletarAberto, setModalDeletarAberto] = useState(false);
+  const [servicoVinculando, setServicoVinculando] = useState<Servico | null>(
+    null,
+  );
+  const [modalVincularAberto, setModalVincularAberto] = useState(false);
 
   const areaTabelaRef = useRef<HTMLDivElement>(null);
   const theadRef = useRef<HTMLTableSectionElement>(null);
@@ -81,33 +79,17 @@ export function DataTableFiliaisPorEmpresa({
   const [linhasPorPagina, setLinhasPorPagina] = useState(itensPorPagina);
   const alturaLinhaRef = useRef(ALTURA_LINHA_PADRAO);
 
-  const abrirEdicao = (filial: Filial) => {
-    setFilialEditando(filial);
-    setModalEditarAberto(true);
+  const abrirVinculo = (servico: Servico) => {
+    setServicoVinculando(servico);
+    setModalVincularAberto(true);
   };
 
-  const fecharEdicao = () => {
-    setModalEditarAberto(false);
-    setFilialEditando(null);
+  const fecharVinculo = () => {
+    setModalVincularAberto(false);
+    setServicoVinculando(null);
   };
 
-  const handleEdicaoSucesso = () => {
-    fecharEdicao();
-    setInternalRefreshKey((prev) => prev + 1);
-  };
-
-  const abrirExclusao = (filial: Filial) => {
-    setFilialExcluindo(filial);
-    setModalDeletarAberto(true);
-  };
-
-  const fecharExclusao = () => {
-    setModalDeletarAberto(false);
-    setFilialExcluindo(null);
-  };
-
-  const handleExclusaoSucesso = () => {
-    fecharExclusao();
+  const handleVinculoSucesso = () => {
     setInternalRefreshKey((prev) => prev + 1);
   };
 
@@ -150,10 +132,10 @@ export function DataTableFiliaisPorEmpresa({
     const linhas = Math.max(3, Math.floor(alturaDisponivel / alturaLinha));
 
     setLinhasPorPagina((atual) => (atual === linhas ? atual : linhas));
-  }, [carregando, filiais.length]);
+  }, [carregando, servicos.length]);
 
   useEffect(() => {
-    async function carregarFiliais() {
+    async function carregarServicos() {
       if (!empresaId) {
         setCarregando(false);
         return;
@@ -162,54 +144,50 @@ export function DataTableFiliaisPorEmpresa({
       try {
         setCarregando(true);
         const response = await apiFetch.get(
-          `/api/filiais/listarPorEmpresa?empresa=${empresaId}`,
+          `/api/servicos/listarPorEmpresa?empresa=${empresaId}`,
         );
 
         const dadosBrutos =
           response.data?.exists?.dados || response.data?.dados;
         const itens = Array.isArray(dadosBrutos) ? dadosBrutos : [];
 
-        const filiaisFormatadas: Filial[] = Array.from(
-          new Map<string, Filial>(
-            (itens as FilialApi[]).map((item) => {
-              const filial = {
-                id: String(item.id_filial || item.id),
+        const servicosFormatados: Servico[] = Array.from(
+          new Map<string, Servico>(
+            (itens as ServicoApi[]).map((item) => {
+              const servico = {
+                id: String(item.id_servico || item.id),
                 nome: item.nome || "",
-                endereco: item.endereco,
-                bairro: item.bairro,
-                cidade: item.cidade,
-                uf: item.uf,
+                descricao: item.descricao,
+                peso: item.peso !== undefined ? Number(item.peso) : undefined,
+                valor:
+                  item.valor !== undefined ? Number(item.valor) : undefined,
+                preco: item.preco ? Number(item.preco) : undefined,
                 criadoEm: item.created_at || item.criadoEm,
               };
-              return [filial.id, filial] as const;
+              return [servico.id, servico] as const;
             }),
           ).values(),
         );
 
-        setFiliais(filiaisFormatadas);
+        setServicos(servicosFormatados);
       } catch (error) {
-        console.error("Erro ao carregar filiais da empresa:", error);
+        console.error("Erro ao carregar serviços da empresa:", error);
       } finally {
         setCarregando(false);
       }
     }
 
-    carregarFiliais();
+    carregarServicos();
   }, [empresaId, refreshKey, internalRefreshKey]);
 
-  const filiaisFiltradas = useMemo(() => {
-    return filiais
-      .filter((filial) => {
+  const servicosFiltrados = useMemo(() => {
+    return servicos
+      .filter((servico) => {
         const termo = busca.toLowerCase();
-        const nomeMatch = filial.nome?.toLowerCase().includes(termo);
-        const enderecoMatch = filial.endereco?.toLowerCase().includes(termo);
-        const bairroMatch = filial.bairro?.toLowerCase().includes(termo);
-        const cidadeMatch = filial.cidade?.toLowerCase().includes(termo);
-        const ufMatch = filial.uf?.toLowerCase().includes(termo);
+        const nomeMatch = servico.nome?.toLowerCase().includes(termo);
+        const descricaoMatch = servico.descricao?.toLowerCase().includes(termo);
 
-        return (
-          nomeMatch || enderecoMatch || bairroMatch || cidadeMatch || ufMatch
-        );
+        return nomeMatch || descricaoMatch;
       })
       .sort((a, b) => {
         if (ordenacao === "nome-asc") {
@@ -230,19 +208,19 @@ export function DataTableFiliaisPorEmpresa({
         }
         return 0;
       });
-  }, [filiais, busca, ordenacao]);
+  }, [servicos, busca, ordenacao]);
 
   const totalPaginas = Math.max(
     1,
-    Math.ceil(filiaisFiltradas.length / linhasPorPagina),
+    Math.ceil(servicosFiltrados.length / linhasPorPagina),
   );
 
   const paginaVisivel = Math.min(paginaAtual, totalPaginas);
 
-  const filiaisPaginadas = useMemo(() => {
+  const servicosPaginados = useMemo(() => {
     const inicio = (paginaVisivel - 1) * linhasPorPagina;
-    return filiaisFiltradas.slice(inicio, inicio + linhasPorPagina);
-  }, [filiaisFiltradas, paginaVisivel, linhasPorPagina]);
+    return servicosFiltrados.slice(inicio, inicio + linhasPorPagina);
+  }, [servicosFiltrados, paginaVisivel, linhasPorPagina]);
 
   return (
     <>
@@ -257,7 +235,7 @@ export function DataTableFiliaisPorEmpresa({
                 setBusca(e.target.value);
                 setPaginaAtual(1);
               }}
-              placeholder="Buscar por nome, endereço, cidade ou UF..."
+              placeholder="Buscar por nome ou descrição..."
               className="w-full rounded-xl border border-white/5 bg-white/[0.03] py-1.5 pl-10 pr-4 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-violet-500/50 focus:bg-white/[0.05]"
             />
           </div>
@@ -293,17 +271,17 @@ export function DataTableFiliaisPorEmpresa({
             <table className="w-full table-fixed border-collapse text-left">
               <thead ref={theadRef} className="bg-[#0c0c14] shadow-sm">
                 <tr className="border-b border-white/5 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
-                  <th className="w-[40%] px-3 py-2.5 sm:w-[30%]">Filial</th>
-                  <th className="hidden px-3 py-2.5 sm:table-cell sm:w-[28%]">
-                    Endereço
+                  <th className="w-[35%] px-3 py-2.5 sm:w-[30%]">Serviço</th>
+                  <th className="hidden px-3 py-2.5 sm:table-cell sm:w-[32%]">
+                    Descrição
                   </th>
-                  <th className="hidden px-3 py-2.5 md:table-cell md:w-[16%]">
-                    Cidade / UF
+                  <th className="hidden px-3 py-2.5 md:table-cell md:w-[14%]">
+                    Preço
                   </th>
-                  <th className="hidden px-3 py-2.5 lg:table-cell lg:w-[14%]">
+                  <th className="hidden px-3 py-2.5 lg:table-cell lg:w-[12%]">
                     Cadastro
                   </th>
-                  <th className="w-[30%] px-3 py-2.5 text-right sm:w-[12%]">
+                  <th className="w-[35%] px-3 py-2.5 text-right sm:w-[12%]">
                     Ações
                   </th>
                 </tr>
@@ -316,38 +294,43 @@ export function DataTableFiliaisPorEmpresa({
                       colSpan={5}
                       className="py-8 text-center text-sm text-zinc-400"
                     >
-                      Carregando filiais...
+                      Carregando serviços...
                     </td>
                   </tr>
-                ) : filiaisPaginadas.length === 0 ? (
+                ) : servicosPaginados.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
                       className="py-8 text-center text-sm text-zinc-500"
                     >
-                      Nenhuma filial corresponde à sua busca.
+                      Nenhum serviço corresponde à sua busca.
                     </td>
                   </tr>
                 ) : (
-                  filiaisPaginadas.map((filial, index) => (
+                  servicosPaginados.map((servico, index) => (
                     <tr
-                      key={filial.id}
+                      key={servico.id}
                       ref={index === 0 ? primeiraLinhaRef : undefined}
                       className="transition-colors hover:bg-white/[0.02]"
                     >
                       <td className="truncate px-3 py-2.5">
                         <div className="flex min-w-0 items-center gap-2">
                           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
-                            <Building2 className="h-4 w-4" />
+                            <Wrench className="h-4 w-4" />
                           </div>
                           <div className="min-w-0">
                             <p className="truncate font-semibold text-white">
-                              {filial.nome}
+                              {servico.nome}
                             </p>
-                            {filial.cidade && (
+                            {(servico.valor !== undefined ||
+                              servico.preco !== undefined) && (
                               <p className="truncate text-xs text-zinc-500 sm:hidden">
-                                {filial.cidade}{" "}
-                                {filial.uf ? `- ${filial.uf}` : ""}
+                                {(
+                                  (servico.valor ?? servico.preco) as number
+                                ).toLocaleString("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                })}
                               </p>
                             )}
                           </div>
@@ -355,29 +338,30 @@ export function DataTableFiliaisPorEmpresa({
                       </td>
 
                       <td className="hidden truncate px-3 py-2.5 sm:table-cell">
-                        {filial.endereco && (
-                          <span className="flex items-center gap-1.5 truncate text-xs text-zinc-400">
-                            <MapPin className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-                            <span className="truncate">{filial.endereco}</span>
+                        {servico.descricao && (
+                          <span className="truncate text-xs text-zinc-400">
+                            {servico.descricao}
                           </span>
                         )}
                       </td>
 
-                      <td className="hidden truncate px-3 py-2.5 md:table-cell">
-                        {(filial.cidade || filial.uf) && (
-                          <span className="truncate text-xs text-zinc-400">
-                            {filial.cidade || ""}{" "}
-                            {filial.cidade && filial.uf ? "/" : ""}{" "}
-                            {filial.uf || ""}
-                          </span>
-                        )}
+                      <td className="hidden truncate px-3 py-2.5 md:table-cell text-xs text-zinc-300">
+                        {servico.valor !== undefined ||
+                        servico.preco !== undefined
+                          ? (
+                              (servico.valor ?? servico.preco) as number
+                            ).toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })
+                          : "-"}
                       </td>
 
                       <td className="hidden truncate px-3 py-2.5 text-xs text-zinc-400 lg:table-cell">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-                          {filial.criadoEm
-                            ? new Date(filial.criadoEm).toLocaleDateString(
+                          {servico.criadoEm
+                            ? new Date(servico.criadoEm).toLocaleDateString(
                                 "pt-BR",
                               )
                             : "-"}
@@ -388,10 +372,15 @@ export function DataTableFiliaisPorEmpresa({
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
-                            onClick={() => {
-                              abrirEdicao(filial);
-                              onEditar?.(filial);
-                            }}
+                            onClick={() => abrirVinculo(servico)}
+                            className="rounded-md border border-violet-500/20 bg-violet-500/10 p-1.5 text-violet-300 transition-colors hover:bg-violet-500/20 hover:text-white"
+                            title="Vincular Filiais"
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onEditar?.(servico)}
                             className="rounded-md border border-white/5 bg-white/5 p-1.5 text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
                             title="Editar"
                           >
@@ -399,19 +388,8 @@ export function DataTableFiliaisPorEmpresa({
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              abrirExclusao(filial);
-                              onEliminar?.(filial);
-                            }}
-                            className="
-                            rounded-md
-                            border border-red-500/10
-                            bg-red-500/5
-                            p-1.5
-                            text-red-400
-                            transition-colors
-                            hover:bg-red-500/10
-                            hover:text-red-300"
+                            onClick={() => onEliminar?.(servico)}
+                            className="rounded-md border border-red-500/10 bg-red-500/5 p-1.5 text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
                             title="Excluir"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -425,16 +403,16 @@ export function DataTableFiliaisPorEmpresa({
             </table>
           </div>
 
-          {!carregando && filiaisFiltradas.length > 0 && (
+          {!carregando && servicosFiltrados.length > 0 && (
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/5 bg-white/[0.01] px-3 py-2">
               <span className="text-xs text-zinc-500">
                 Mostrando {(paginaVisivel - 1) * linhasPorPagina + 1}
                 {"–"}
                 {Math.min(
                   paginaVisivel * linhasPorPagina,
-                  filiaisFiltradas.length,
+                  servicosFiltrados.length,
                 )}{" "}
-                de {filiaisFiltradas.length} filiais
+                de {servicosFiltrados.length} serviços
               </span>
 
               <div className="flex items-center gap-1">
@@ -470,18 +448,12 @@ export function DataTableFiliaisPorEmpresa({
         </div>
       </div>
 
-      <EditarFilialModal
-        isOpen={modalEditarAberto}
-        onClose={fecharEdicao}
-        onSuccess={handleEdicaoSucesso}
-        filial={filialEditando}
-      />
-
-      <DeletarFilialModal
-        isOpen={modalDeletarAberto}
-        onClose={fecharExclusao}
-        onSuccess={handleExclusaoSucesso}
-        filial={filialExcluindo}
+      <VincularFiliaisServicoModal
+        isOpen={modalVincularAberto}
+        onClose={fecharVinculo}
+        onSuccess={handleVinculoSucesso}
+        servico={servicoVinculando}
+        empresaId={empresaId}
       />
     </>
   );

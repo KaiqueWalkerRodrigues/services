@@ -6,7 +6,7 @@ import { DataTableEmpresas } from "../../components/DataTables/DataTableEmpresas
 import { Button } from "../../components/Button";
 import apiFetch from "../../config/apiFetch";
 import { CadastrarEmpresaModal } from "../../components/Modal/CadastrarEmpresaModal";
-import { EditarEmpresaModal } from "../../components/Modal/EditarEmpresaModal";
+import { EditarEmpresaModal } from "../../components/Modal/EditarEmpresaModalModal";
 import { DeletarEmpresaModal } from "../../components/Modal/DeletarEmpresaModal";
 import { EditarColaboradorModal } from "../../components/Modal/EditarColaboradorModal";
 import { DeletarColaboradorModal } from "../../components/Modal/DeletarColaboradorModal";
