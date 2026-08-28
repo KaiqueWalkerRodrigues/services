@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export type ButtonSize = "sm" | "md" | "lg" | "xl";
+export type ButtonSize = "sm" | "md" | "lg" | "xl" | "table";
 export type ButtonColor =
   | "success"
   | "danger"
@@ -18,7 +18,9 @@ export type ButtonColor =
   | "pink"
   | "orange"
   | "teal";
-export type ButtonVariant = "solid" | "outline";
+export type ButtonVariant = "solid" | "outline" | "tableEdit" | "tableDelete";
+type ColoredButtonVariant = "solid" | "outline";
+type TableButtonVariant = "tableEdit" | "tableDelete";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
@@ -32,10 +34,18 @@ const sizeStyles: Record<ButtonSize, string> = {
   md: "px-4 py-2 text-sm",
   lg: "px-6 py-3 text-base",
   xl: "px-8 py-4 text-lg",
+  table: "p-1.5 text-xs",
+};
+
+const tableVariantStyles: Record<TableButtonVariant, string> = {
+  tableEdit:
+    "border-white/5 bg-white/5 p-1.5 text-zinc-300 hover:bg-white/10 hover:text-white",
+  tableDelete:
+    "border-red-500/10 bg-red-500/5 p-1.5 text-red-400 hover:bg-red-500/10 hover:text-red-300",
 };
 
 // Separamos os estilos por variante, mantendo o outline idêntico ao seu original
-const colorStyles: Record<ButtonVariant, Record<ButtonColor, string>> = {
+const colorStyles: Record<ColoredButtonVariant, Record<ButtonColor, string>> = {
   outline: {
     success:
       "border-[#22c55e] text-[#22c55e] hover:bg-[#22c55e]/10 focus:ring-[#22c55e]/50",
@@ -125,11 +135,19 @@ export function Button({
 }: ButtonProps) {
   // Removeu-se o "bg-transparent" fixo da baseStyles para permitir que a variante solid aplique o background
   const baseStyles =
-    "cursor-pointer border font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a]";
+    "cursor-pointer border font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a]";
+  const roundedStyle =
+    variant === "tableEdit" || variant === "tableDelete"
+      ? "rounded-md"
+      : "rounded-xl";
+  const variantStyles =
+    variant === "tableEdit" || variant === "tableDelete"
+      ? tableVariantStyles[variant]
+      : colorStyles[variant][color];
 
   return (
     <button
-      className={`${baseStyles} ${sizeStyles[size]} ${colorStyles[variant][color]} ${className}`}
+      className={`${baseStyles} ${roundedStyle} ${sizeStyles[size]} ${variantStyles} ${className}`}
       {...props}
     >
       {children}

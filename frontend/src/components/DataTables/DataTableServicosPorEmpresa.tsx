@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import apiFetch from "../../config/apiFetch";
+import { Button } from "../Button";
 import { VincularFiliaisServicoModal } from "../Modal/VincularFiliaisServicoModal";
 
 interface Servico {
@@ -378,22 +379,24 @@ export function DataTableServicos({
                           >
                             <Link2 className="h-3.5 w-3.5" />
                           </button>
-                          <button
+                          <Button
                             type="button"
+                            size="table"
+                            variant="tableEdit"
                             onClick={() => onEditar?.(servico)}
-                            className="rounded-md border border-white/5 bg-white/5 p-1.5 text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
                             title="Editar"
                           >
                             <Edit className="h-3.5 w-3.5" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            size="table"
+                            variant="tableDelete"
                             onClick={() => onEliminar?.(servico)}
-                            className="rounded-md border border-red-500/10 bg-red-500/5 p-1.5 text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
                             title="Excluir"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>

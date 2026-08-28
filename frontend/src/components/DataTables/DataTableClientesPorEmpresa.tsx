@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import apiFetch from "../../config/apiFetch";
+import { Button } from "../Button";
 import { EditarClienteModal } from "../Modal/EditarClienteViaColaboradorModal";
 
 interface Cliente {
@@ -518,26 +519,18 @@ export function DataTableClientes({
                       {/* AÇÕES */}
                       <td className="px-3 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button
+                          <Button
                             type="button"
+                            size="table"
+                            variant="tableEdit"
                             onClick={() => {
                               abrirEdicao(cliente);
                               onEditar?.(cliente);
                             }}
-                            className="
-                                rounded-md
-                                border border-white/5
-                                bg-white/5
-                                p-1.5
-                                text-zinc-300
-                                transition-colors
-                                hover:bg-white/10
-                                hover:text-white
-                              "
                             title="Editar"
                           >
                             <Edit className="h-3.5 w-3.5" />
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>

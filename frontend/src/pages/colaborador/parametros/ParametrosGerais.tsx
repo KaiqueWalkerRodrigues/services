@@ -24,7 +24,7 @@ export default function PaginaParametrosGerais() {
           </div>
         </div>
 
-        <div className="max-w-3xl">
+        <div className="w-full">
           <ParametrosGeraisFormulario empresaId={usuario?.id_empresa} />
         </div>
       </main>
