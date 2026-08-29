@@ -36,12 +36,26 @@ switch ($metodo) {
             if (!isset($_GET['empresa'])) {
                 http_response_code(400);
                 echo json_encode(["mensagem" => "Parâmetro empresa é obrigatório"]);
+                break;
             }
             if ($loginValido) {
                 echo json_encode(['exists' => $colaborador->listarPorEmpresa($_GET['empresa'])]);
             } else {
                 http_response_code(401);
                 echo json_encode(["mensagem" => "Não autorizado"]);
+            }
+            break;
+        } elseif ($subpath === 'listarFiliais') {
+            if (!isset($_GET['id_colaborador'])) {
+                http_response_code(400);
+                echo json_encode(["status" => "erro", "mensagem" => "O parâmetro id_colaborador é obrigatório"]);
+                break;
+            }
+            if ($loginValido) {
+                echo json_encode($colaborador->listarFiliais($_GET['id_colaborador']));
+            } else {
+                http_response_code(401);
+                echo json_encode(["status" => "erro", "mensagem" => "Não autorizado"]);
             }
             break;
         } else {
@@ -58,8 +72,10 @@ switch ($metodo) {
 
         if ($subpath === 'adicionarEmpresa' && isset($data->id_empresa) && isset($data->id_colaborador)) {
             echo json_encode($colaborador->adicionarEmpresa($data->id_colaborador, $data->id_empresa));
+        } elseif ($subpath === 'adicionarFilial' && isset($data->id_filial) && isset($data->id_colaborador)) {
+            echo json_encode($colaborador->adicionarFilial($data->id_colaborador, $data->id_filial));
         } else {
-            echo json_encode($colaborador->cadastrar($data->id_empresa, $data->nome, $data->login, $data->senha));
+            echo json_encode($colaborador->cadastrar($data->id_empresa ?? null, $data->nome, $data->login, $data->senha));
         }
         break;
 
@@ -93,13 +109,16 @@ switch ($metodo) {
         break;
 
     case 'DELETE':
+        $data = json_decode(file_get_contents("php://input"));
+
         if ($subpath === 'removerEmpresa' && isset($data->id_empresa) && isset($data->id_colaborador)) {
             echo json_encode($colaborador->removerEmpresa($data->id_colaborador, $data->id_empresa));
+        } elseif ($subpath === 'removerFilial' && isset($data->id_filial) && isset($data->id_colaborador)) {
+            echo json_encode($colaborador->removerFilial($data->id_colaborador, $data->id_filial));
         } else {
-            $data = json_decode(file_get_contents("php://input"));
-            echo json_encode($colaborador->deletar($data->id_colaborador));
-            break;
+            echo json_encode($colaborador->deletar($data->id_colaborador ?? null));
         }
+        break;
 
     default:
         http_response_code(405);

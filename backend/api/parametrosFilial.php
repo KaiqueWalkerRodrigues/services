@@ -26,18 +26,18 @@ $token = AuthHelper::obterTokenJwt();
 $dadosUsuario = $token ? AuthHelper::validarToken($token) : false;
 $loginValido = (bool) $dadosUsuario;
 
-$parametros = new ParametrosEmpresas();
+$parametros = new ParametrosFilial();
 
 switch ($metodo) {
     case 'GET':
-        if (!isset($_GET['id_empresa'])) {
+        if (!isset($_GET['id_filial'])) {
             http_response_code(400);
-            echo json_encode(["status" => "erro", "mensagem" => "O parâmetro id_empresa é obrigatório"]);
+            echo json_encode(["status" => "erro", "mensagem" => "O parâmetro id_filial é obrigatório"]);
             break;
         }
 
         if ($loginValido) {
-            echo json_encode($parametros->mostrar($_GET['id_empresa']));
+            echo json_encode($parametros->mostrar($_GET['id_filial']));
         } else {
             http_response_code(401);
             echo json_encode(["status" => "erro", "mensagem" => "Não autorizado"]);
@@ -49,7 +49,7 @@ switch ($metodo) {
 
         if ($loginValido) {
             echo json_encode($parametros->Salvar(
-                $data->id_empresa ?? null,
+                $data->id_filial ?? null,
                 $data->tempo_agendamento ?? null,
                 $data->tempo_intervalo ?? null
             ));

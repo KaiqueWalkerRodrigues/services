@@ -5,26 +5,26 @@ import { Clock, Loader2, Save } from "lucide-react";
 import apiFetch from "../../config/apiFetch";
 import { showToast } from "../Toast";
 
-interface ParametrosGeraisFormularioProps {
-  empresaId?: string;
+interface ParametrosFilialFormularioProps {
+  filialId?: string;
 }
 
-export function ParametrosGeraisFormulario({
-  empresaId,
-}: ParametrosGeraisFormularioProps) {
+export function ParametrosFilialFormulario({
+  filialId,
+}: ParametrosFilialFormularioProps) {
   const [tempoAgendamento, setTempoAgendamento] = useState("");
   const [tempoIntervalo, setTempoIntervalo] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
-    if (!empresaId) return;
+    if (!filialId) return;
 
     async function buscarParametros() {
       try {
         setCarregando(true);
         const resposta = await apiFetch.get(
-          `/api/parametros-empresa?id_empresa=${empresaId}`,
+          `/api/parametros-filial?id_filial=${filialId}`,
         );
 
         const dados = resposta.data.dados ?? resposta.data;
@@ -33,7 +33,7 @@ export function ParametrosGeraisFormulario({
       } catch {
         showToast({
           type: "error",
-          message: "Não foi possível carregar os parâmetros.",
+          message: "Não foi possível carregar os parâmetros da filial.",
         });
       } finally {
         setCarregando(false);
@@ -41,24 +41,24 @@ export function ParametrosGeraisFormulario({
     }
 
     buscarParametros();
-  }, [empresaId]);
+  }, [filialId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!empresaId) return;
+    if (!filialId) return;
 
     try {
       setSalvando(true);
 
-      await apiFetch.put(`/api/parametros-empresa`, {
-        id_empresa: empresaId,
+      await apiFetch.put(`/api/parametros-filial`, {
+        id_filial: filialId,
         tempo_agendamento: tempoAgendamento,
         tempo_intervalo: tempoIntervalo,
       });
 
       showToast({
         type: "success",
-        message: "Parâmetros atualizados com sucesso!",
+        message: "Parâmetros da filial atualizados com sucesso!",
       });
     } catch {
       showToast({
@@ -84,8 +84,7 @@ export function ParametrosGeraisFormulario({
         onSubmit={handleSubmit}
         className="w-full space-y-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-xl"
       >
-        {/* Grid para organizar os inputs lado a lado preenchendo a tela */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-zinc-300">
               Tempo de Agendamento

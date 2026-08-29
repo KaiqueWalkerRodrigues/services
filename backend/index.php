@@ -88,7 +88,7 @@ $rotas = [
             'PUT' => true,
             'PATCH' => true,
             'DELETE' => true,
-            'POST' => false,
+            'POST' => true,
             'default' => true
         ],
         'permissoes' => null
@@ -146,9 +146,19 @@ $rotas = [
         'permissoes' => null
     ],
 
-    // servicos
-    'api/parametros-empresas' => [
-        'file' => 'parametrosEmpresas.php',
+    // parametros empresa
+    'api/parametros-empresa' => [
+        'file' => 'parametrosEmpresa.php',
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+        ],
+        'permissoes' => null
+    ],
+
+    // parametros filial
+    'api/parametros-filial' => [
+        'file' => 'parametrosFilial.php',
         'login' => [
             'GET' => true,
             'PUT' => true,

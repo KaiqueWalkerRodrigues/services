@@ -585,4 +585,89 @@ class Colaborador
             ];
         }
     }
+
+    public function adicionarFilial($id_colaborador, $id_filial)
+    {
+        try {
+            $sqlCheck = "SELECT id_colaborador_filial FROM colaboradores_filiais 
+                         WHERE id_colaborador = :id_colaborador AND id_filial = :id_filial 
+                         LIMIT 1";
+            $stmtCheck = $this->pdo->prepare($sqlCheck);
+            $stmtCheck->bindParam(':id_colaborador', $id_colaborador);
+            $stmtCheck->bindParam(':id_filial', $id_filial);
+            $stmtCheck->execute();
+
+            if ($stmtCheck->fetch()) {
+                return ['status' => 'erro', 'mensagem' => 'Este colaborador já está vinculado a esta filial.'];
+            }
+
+            $sql = "INSERT INTO colaboradores_filiais (id_filial, id_colaborador, created_at) 
+                    VALUES (:id_filial, :id_colaborador, NOW())";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_filial', $id_filial);
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+            $stmt->execute();
+
+            return ['status' => 'sucesso', 'mensagem' => 'Filial vinculada com sucesso!'];
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return ['status' => 'erro', 'mensagem' => 'Erro ao vincular filial: ' . $e->getMessage()];
+        }
+    }
+
+    public function removerFilial($id_colaborador, $id_filial)
+    {
+        try {
+            $sql = "DELETE FROM colaboradores_filiais 
+                    WHERE id_colaborador = :id_colaborador AND id_filial = :id_filial";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+            $stmt->bindParam(':id_filial', $id_filial);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                return ['status' => 'sucesso', 'mensagem' => 'Filial removida com sucesso!'];
+            }
+
+            return ['status' => 'erro', 'mensagem' => 'Vínculo com a filial não encontrado.'];
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return ['status' => 'erro', 'mensagem' => 'Erro ao remover filial: ' . $e->getMessage()];
+        }
+    }
+
+    public function listarFiliais($id_colaborador)
+    {
+        try {
+            $sql = "SELECT cf.id_colaborador_filial, cf.id_filial, cf.created_at 
+                    FROM colaboradores_filiais cf
+                    WHERE cf.id_colaborador = :id_colaborador";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_colaborador', $id_colaborador, PDO::PARAM_INT);
+            $stmt->execute();
+            $dados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($dados) {
+                return [
+                    'status' => 'sucesso',
+                    'total' => count($dados),
+                    'dados' => $dados
+                ];
+            }
+
+            return [
+                'status' => 'sucesso',
+                'total' => 0,
+                'dados' => [],
+                'mensagem' => 'Nenhuma filial encontrada para este colaborador.'
+            ];
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return [
+                'status' => 'erro',
+                'mensagem' => 'Erro ao buscar as filiais do colaborador: ' . $e->getMessage()
+            ];
+        }
+    }
 }

@@ -12,11 +12,13 @@ import {
   ChevronRight,
   Shield,
   Trash2,
+  Link2,
 } from "lucide-react";
 
 import apiFetch from "../../config/apiFetch";
 import { Button } from "../Button";
 import { EditarColaboradorModal } from "../Modal/EditarColaboradorViaColaboradorModal";
+import { VincularFiliaisColaboradorModal } from "../Modal/VincularFiliaisColaboradoesModal";
 
 interface Colaborador {
   id: string;
@@ -60,25 +62,22 @@ export function DataTableColaboradores({
   const [ordenacao, setOrdenacao] = useState<Ordenacao>("nome-asc");
   const [paginaAtual, setPaginaAtual] = useState(1);
 
-  // Estado interno para forçar o refresh local ao editar/cadastrar
   const [internalRefreshKey, setInternalRefreshKey] = useState(0);
 
-  // Colaborador que está sendo editado
   const [colaboradorEditando, setColaboradorEditando] =
     useState<Colaborador | null>(null);
   const [modalEditarAberto, setModalEditarAberto] = useState(false);
 
-  // Refs para medir as áreas reais
+  const [colaboradorVinculando, setColaboradorVinculando] =
+    useState<Colaborador | null>(null);
+  const [modalVincularAberto, setModalVincularAberto] = useState(false);
+
   const areaTabelaRef = useRef<HTMLDivElement>(null);
   const theadRef = useRef<HTMLTableSectionElement>(null);
   const primeiraLinhaRef = useRef<HTMLTableRowElement>(null);
 
   const [linhasPorPagina, setLinhasPorPagina] = useState(itensPorPagina);
   const alturaLinhaRef = useRef(ALTURA_LINHA_PADRAO);
-
-  // ============================================================
-  // ABRIR / FECHAR MODAL DE EDIÇÃO
-  // ============================================================
 
   const abrirEdicao = (colaborador: Colaborador) => {
     setColaboradorEditando(colaborador);
@@ -95,9 +94,19 @@ export function DataTableColaboradores({
     setInternalRefreshKey((prev) => prev + 1);
   };
 
-  // ============================================================
-  // CALCULAR LINHAS DA TABELA
-  // ============================================================
+  const abrirVinculo = (colaborador: Colaborador) => {
+    setColaboradorVinculando(colaborador);
+    setModalVincularAberto(true);
+  };
+
+  const fecharVinculo = () => {
+    setModalVincularAberto(false);
+    setColaboradorVinculando(null);
+  };
+
+  const handleVinculoSucesso = () => {
+    setInternalRefreshKey((prev) => prev + 1);
+  };
 
   useEffect(() => {
     const areaEl = areaTabelaRef.current;
@@ -143,10 +152,6 @@ export function DataTableColaboradores({
     setLinhasPorPagina((atual) => (atual === linhas ? atual : linhas));
   }, [carregando, colaboradores.length]);
 
-  // ============================================================
-  // CARREGAR COLABORADORES
-  // ============================================================
-
   useEffect(() => {
     async function carregarColaboradores() {
       if (!empresaId) {
@@ -190,10 +195,6 @@ export function DataTableColaboradores({
     carregarColaboradores();
   }, [empresaId, refreshKey, internalRefreshKey]);
 
-  // ============================================================
-  // FILTRO + ORDENAÇÃO
-  // ============================================================
-
   const colaboradoresFiltrados = useMemo(() => {
     return colaboradores
       .filter((colaborador) => {
@@ -224,10 +225,6 @@ export function DataTableColaboradores({
       });
   }, [colaboradores, busca, ordenacao]);
 
-  // ============================================================
-  // PAGINAÇÃO
-  // ============================================================
-
   const totalPaginas = Math.max(
     1,
     Math.ceil(colaboradoresFiltrados.length / linhasPorPagina),
@@ -240,14 +237,9 @@ export function DataTableColaboradores({
     return colaboradoresFiltrados.slice(inicio, inicio + linhasPorPagina);
   }, [colaboradoresFiltrados, paginaVisivel, linhasPorPagina]);
 
-  // ============================================================
-  // RENDER
-  // ============================================================
-
   return (
     <>
       <div className="flex h-full w-full min-h-0 flex-col gap-3 overflow-hidden">
-        {/* BUSCA E FILTROS */}
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
           <div className="relative min-w-[160px] flex-1">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
@@ -316,7 +308,6 @@ export function DataTableColaboradores({
           </div>
         </div>
 
-        {/* TABELA */}
         <div
           className="
             flex
@@ -342,7 +333,7 @@ export function DataTableColaboradores({
                     text-zinc-500
                   "
                 >
-                  <th className="w-[50%] px-3 py-2.5 sm:w-[40%]">
+                  <th className="w-[45%] px-3 py-2.5 sm:w-[35%]">
                     Colaborador
                   </th>
                   <th className="hidden px-3 py-2.5 sm:table-cell sm:w-[32%]">
@@ -351,7 +342,7 @@ export function DataTableColaboradores({
                   <th className="hidden px-3 py-2.5 lg:table-cell lg:w-[16%]">
                     Cadastro
                   </th>
-                  <th className="w-[30%] px-3 py-2.5 text-right sm:w-[12%]">
+                  <th className="w-[35%] px-3 py-2.5 text-right sm:w-[17%]">
                     Ações
                   </th>
                 </tr>
@@ -383,7 +374,6 @@ export function DataTableColaboradores({
                       ref={index === 0 ? primeiraLinhaRef : undefined}
                       className="transition-colors hover:bg-white/[0.02]"
                     >
-                      {/* COLABORADOR */}
                       <td className="truncate px-3 py-2.5">
                         <div className="flex min-w-0 items-center gap-2">
                           <div
@@ -415,7 +405,6 @@ export function DataTableColaboradores({
                         </div>
                       </td>
 
-                      {/* LOGIN */}
                       <td className="hidden truncate px-3 py-2.5 sm:table-cell">
                         {colaborador.login && (
                           <span className="flex items-center gap-1.5 truncate text-xs text-zinc-400">
@@ -427,7 +416,6 @@ export function DataTableColaboradores({
                         )}
                       </td>
 
-                      {/* CADASTRO */}
                       <td className="hidden truncate px-3 py-2.5 text-xs text-zinc-400 lg:table-cell">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
@@ -439,9 +427,17 @@ export function DataTableColaboradores({
                         </span>
                       </td>
 
-                      {/* AÇÕES */}
                       <td className="px-3 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => abrirVinculo(colaborador)}
+                            className="rounded-md border border-violet-500/20 bg-violet-500/10 p-1.5 text-violet-300 transition-colors hover:bg-violet-500/20 hover:text-white"
+                            title="Vincular Filiais"
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </button>
+
                           <Button
                             type="button"
                             size="table"
@@ -459,7 +455,7 @@ export function DataTableColaboradores({
                             type="button"
                             size="table"
                             variant="tableDelete"
-                            onClick={() => onRemover?.(colaborador)}
+                            onClick={() => onEliminar?.(colaborador)}
                             title="Remover"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -473,7 +469,6 @@ export function DataTableColaboradores({
             </table>
           </div>
 
-          {/* PAGINAÇÃO */}
           {!carregando && colaboradoresFiltrados.length > 0 && (
             <div
               className="
@@ -560,12 +555,19 @@ export function DataTableColaboradores({
         </div>
       </div>
 
-      {/* MODAL DE EDIÇÃO */}
       <EditarColaboradorModal
         isOpen={modalEditarAberto}
         onClose={fecharEdicao}
         onSuccess={handleEdicaoSucesso}
         colaborador={colaboradorEditando}
+      />
+
+      <VincularFiliaisColaboradorModal
+        isOpen={modalVincularAberto}
+        onClose={fecharVinculo}
+        onSuccess={handleVinculoSucesso}
+        colaborador={colaboradorVinculando}
+        empresaId={empresaId}
       />
     </>
   );

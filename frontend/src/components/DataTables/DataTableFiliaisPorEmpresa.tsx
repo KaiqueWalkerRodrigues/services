@@ -12,12 +12,14 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  Cog,
 } from "lucide-react";
 
 import apiFetch from "../../config/apiFetch";
 import { Button } from "../Button";
 import { EditarFilialModal } from "../Modal/EditarFilialViaColaboradorModal";
 import { DeletarFilialModal } from "../Modal/DeletarFilialViaColaboradorModal";
+import { ParametrosFilialModal } from "../Modal/ParametrosFilialModal";
 
 interface Filial {
   id: string;
@@ -75,6 +77,9 @@ export function DataTableFiliaisPorEmpresa({
   const [filialExcluindo, setFilialExcluindo] = useState<Filial | null>(null);
   const [modalDeletarAberto, setModalDeletarAberto] = useState(false);
 
+  const [filialParametros, setFilialParametros] = useState<Filial | null>(null);
+  const [modalParametrosAberto, setModalParametrosAberto] = useState(false);
+
   const areaTabelaRef = useRef<HTMLDivElement>(null);
   const theadRef = useRef<HTMLTableSectionElement>(null);
   const primeiraLinhaRef = useRef<HTMLTableRowElement>(null);
@@ -110,6 +115,16 @@ export function DataTableFiliaisPorEmpresa({
   const handleExclusaoSucesso = () => {
     fecharExclusao();
     setInternalRefreshKey((prev) => prev + 1);
+  };
+
+  const abrirParametros = (filial: Filial) => {
+    setFilialParametros(filial);
+    setModalParametrosAberto(true);
+  };
+
+  const fecharParametros = () => {
+    setModalParametrosAberto(false);
+    setFilialParametros(null);
   };
 
   useEffect(() => {
@@ -387,6 +402,14 @@ export function DataTableFiliaisPorEmpresa({
 
                       <td className="px-3 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => abrirParametros(filial)}
+                            className="rounded-md border border-violet-500/20 bg-violet-500/10 p-1.5 text-violet-300 transition-colors hover:bg-violet-500/20 hover:text-white"
+                            title="Parâmetros"
+                          >
+                            <Cog className="h-3.5 w-3.5" />
+                          </button>
                           <Button
                             type="button"
                             size="table"
@@ -477,6 +500,12 @@ export function DataTableFiliaisPorEmpresa({
         onClose={fecharExclusao}
         onSuccess={handleExclusaoSucesso}
         filial={filialExcluindo}
+      />
+
+      <ParametrosFilialModal
+        isOpen={modalParametrosAberto}
+        onClose={fecharParametros}
+        filial={filialParametros}
       />
     </>
   );
