@@ -85,7 +85,7 @@ export function ParametrosGeraisFormulario({
         className="w-full space-y-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-xl"
       >
         {/* Grid para organizar os inputs lado a lado preenchendo a tela */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
           <div>
             <label className="block text-sm font-medium text-zinc-300">
               Tempo de Agendamento

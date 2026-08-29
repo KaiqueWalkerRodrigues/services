@@ -19,6 +19,8 @@ import PaginaColaboradorFilial from "./pages/colaborador/parametros/Filiais";
 import PaginaColaboradorServicos from "./pages/colaborador/parametros/Servicos";
 import PaginaParametrosGerais from "./pages/colaborador/parametros/ParametrosGerais";
 
+const nome = "Barb | ";
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -31,7 +33,7 @@ export default function App() {
           path="/loginColaborador"
           element={
             <AuthProvider>
-              <PageTitle title="Login Colaborador">
+              <PageTitle title={nome + "Login Colaborador"}>
                 <LoginColaborador />
               </PageTitle>
             </AuthProvider>
@@ -40,7 +42,7 @@ export default function App() {
         <Route
           path="/registro"
           element={
-            <PageTitle title="Cadastro">
+            <PageTitle title={nome + "Registro"}>
               <CadastrarCliente />
             </PageTitle>
           }
@@ -54,7 +56,7 @@ export default function App() {
             path="/home"
             element={
               <ProtectedRouteColaborador>
-                <PageTitle title="Home Admin">
+                <PageTitle title={nome + "Home Admin"}>
                   <HomeColaborador />
                 </PageTitle>
               </ProtectedRouteColaborador>
@@ -65,7 +67,7 @@ export default function App() {
             path="/gerenciamento/clientes"
             element={
               <ProtectedRouteColaborador>
-                <PageTitle title="Clientes">
+                <PageTitle title={nome + "Clientes"}>
                   <PaginaColaboradorClientes />
                 </PageTitle>
               </ProtectedRouteColaborador>
@@ -76,7 +78,7 @@ export default function App() {
             path="/parametros/gerais"
             element={
               <ProtectedRouteColaborador>
-                <PageTitle title="Parametros Gerais">
+                <PageTitle title={nome + "Parametros Gerais"}>
                   <PaginaParametrosGerais />
                 </PageTitle>
               </ProtectedRouteColaborador>
@@ -87,7 +89,7 @@ export default function App() {
             path="/parametros/servicos"
             element={
               <ProtectedRouteColaborador>
-                <PageTitle title="Serviços">
+                <PageTitle title={nome + "Serviços"}>
                   <PaginaColaboradorServicos />
                 </PageTitle>
               </ProtectedRouteColaborador>
@@ -98,7 +100,7 @@ export default function App() {
             path="/parametros/colaboradores"
             element={
               <ProtectedRouteColaborador>
-                <PageTitle title="Colaboradores">
+                <PageTitle title={nome + "Colaboradores"}>
                   <PaginaColaboradorColaboradores />
                 </PageTitle>
               </ProtectedRouteColaborador>
@@ -109,7 +111,7 @@ export default function App() {
             path="/parametros/filiais"
             element={
               <ProtectedRouteColaborador>
-                <PageTitle title="Filiais">
+                <PageTitle title={nome + "Filiais"}>
                   <PaginaColaboradorFilial />
                 </PageTitle>
               </ProtectedRouteColaborador>
@@ -120,7 +122,7 @@ export default function App() {
             path="/admin/dashboards"
             element={
               <ProtectedRouteColaborador>
-                <PageTitle title="Admin">
+                <PageTitle title={nome + "Admin"}>
                   <PaginaDashBoards />
                 </PageTitle>
               </ProtectedRouteColaborador>
@@ -131,7 +133,7 @@ export default function App() {
             path="/admin/empresas"
             element={
               <ProtectedRouteColaborador>
-                <PageTitle title="Admin - Empresa">
+                <PageTitle title={nome + "Empresas"}>
                   <PaginaEmpresas />
                 </PageTitle>
               </ProtectedRouteColaborador>
@@ -142,7 +144,7 @@ export default function App() {
             path="/admin/colaboradores"
             element={
               <ProtectedRouteColaborador>
-                <PageTitle title="Admin - Colaborador">
+                <PageTitle title={nome + "Colaboradores"}>
                   <PaginaColaboradores />
                 </PageTitle>
               </ProtectedRouteColaborador>
@@ -153,7 +155,7 @@ export default function App() {
         <Route
           path="/"
           element={
-            <PageTitle title="Barb - Ínicio">
+            <PageTitle title={nome + "Início"}>
               <HomePublica />
             </PageTitle>
           }
