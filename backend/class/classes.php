@@ -9,3 +9,4 @@ include_once __DIR__ . '/Filial.php';
 include_once __DIR__ . '/Servicos.php';
 include_once __DIR__ . '/ParametrosEmpresa.php';
 include_once __DIR__ . '/ParametrosFilial.php';
+include_once __DIR__ . '/ParametrosColaborador.php';

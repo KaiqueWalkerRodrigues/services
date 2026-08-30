@@ -165,6 +165,16 @@ $rotas = [
         ],
         'permissoes' => null
     ],
+
+    // parametros colaborador
+    'api/parametros-colaborador' => [
+        'file' => 'parametrosColaborador.php',
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+        ],
+        'permissoes' => null
+    ],
 ];
 
 // 3. Processamento da Rota
