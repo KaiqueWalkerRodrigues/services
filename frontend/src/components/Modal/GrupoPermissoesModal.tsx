@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { X, ShieldCheck, Check, Search } from "lucide-react";
+import { X, ShieldCheck, Check, Search, CheckCheck } from "lucide-react";
 import apiFetch from "../../config/apiFetch";
 import { Button } from "../Button";
 import { showToast } from "../Toast";
@@ -37,6 +37,9 @@ export function GrupoPermissoesModal({
   >(new Set());
   const [carregando, setCarregando] = useState(false);
   const [salvandoId, setSalvandoId] = useState<string | number | null>(null);
+  const [salvandoGrupoRecurso, setSalvandoGrupoRecurso] = useState<
+    string | null
+  >(null);
   const [busca, setBusca] = useState("");
 
   useEffect(() => {
@@ -164,6 +167,75 @@ export function GrupoPermissoesModal({
     }
   };
 
+  const toggleTodasDoRecurso = async (
+    recurso: string,
+    listaFiltrada: { acao: string; perm: Permissao }[],
+  ) => {
+    if (!grupo) return;
+
+    const idsValidos = listaFiltrada
+      .map(({ perm }) => perm.id ?? perm.id_permissao)
+      .filter((id): id is string | number => id !== undefined && id !== null);
+
+    if (idsValidos.length === 0) return;
+
+    // Verifica se todas as permissões filtradas deste recurso já estão selecionadas
+    const todasAtivas = idsValidos.every((id) => permissoesDoGrupo.has(id));
+
+    setSalvandoGrupoRecurso(recurso);
+
+    try {
+      if (todasAtivas) {
+        // Remove todas uma a uma ou conforme a API suportar
+        for (const idPermissao of idsValidos) {
+          await apiFetch.delete("/api/grupos/removerPermissao", {
+            data: { id_grupo: grupo.id, id_permissao: idPermissao },
+          });
+        }
+
+        setPermissoesDoGrupo((prev) => {
+          const novo = new Set(prev);
+          idsValidos.forEach((id) => novo.delete(id));
+          return novo;
+        });
+
+        showToast({
+          type: "success",
+          message: `Todas as permissões de ${recurso} foram removidas!`,
+        });
+      } else {
+        // Adiciona as que ainda não estão selecionadas
+        for (const idPermissao of idsValidos) {
+          if (!permissoesDoGrupo.has(idPermissao)) {
+            await apiFetch.post("/api/grupos/adicionarPermissao", {
+              id_grupo: grupo.id,
+              id_permissao: idPermissao,
+            });
+          }
+        }
+
+        setPermissoesDoGrupo((prev) => {
+          const novo = new Set(prev);
+          idsValidos.forEach((id) => novo.add(id));
+          return novo;
+        });
+
+        showToast({
+          type: "success",
+          message: `Todas as permissões de ${recurso} foram adicionadas!`,
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao alterar lote de permissões:", error);
+      showToast({
+        type: "error",
+        message: "Não foi possível atualizar o lote de permissões.",
+      });
+    } finally {
+      setSalvandoGrupoRecurso(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -225,14 +297,45 @@ export function GrupoPermissoesModal({
 
               if (filtrados.length === 0) return null;
 
+              const idsFiltrados = filtrados
+                .map(({ perm }) => perm.id ?? perm.id_permissao)
+                .filter(
+                  (id): id is string | number =>
+                    id !== undefined && id !== null,
+                );
+
+              const todasEstaoAtivas =
+                idsFiltrados.length > 0 &&
+                idsFiltrados.every((id) => permissoesDoGrupo.has(id));
+
+              const estaSalvandoGrupo = salvandoGrupoRecurso === recurso;
+
               return (
                 <div
                   key={recurso}
                   className="rounded-xl border border-white/5 bg-white/[0.02] p-4"
                 >
-                  <h3 className="text-xs font-semibold uppercase tracking-widest text-violet-400 mb-3">
-                    {recurso}
-                  </h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-widest text-violet-400">
+                      {recurso}
+                    </h3>
+                    <button
+                      type="button"
+                      disabled={estaSalvandoGrupo}
+                      onClick={() => toggleTodasDoRecurso(recurso, filtrados)}
+                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition-all ${
+                        todasEstaoAtivas
+                          ? "bg-violet-500/20 text-violet-300 border border-violet-500/40 hover:bg-violet-500/30"
+                          : "bg-white/5 text-zinc-400 border border-white/5 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      <CheckCheck className="h-3.5 w-3.5" />
+                      {todasEstaoAtivas
+                        ? "Desmarcar Todos"
+                        : "Selecionar Todos"}
+                    </button>
+                  </div>
+
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {filtrados.map(({ acao, perm }) => {
                       const permId = perm.id ?? perm.id_permissao;
@@ -242,7 +345,8 @@ export function GrupoPermissoesModal({
                       }
 
                       const ativo = permissoesDoGrupo.has(permId);
-                      const salvando = salvandoId === permId;
+                      const salvando =
+                        salvandoId === permId || estaSalvandoGrupo;
 
                       return (
                         <button

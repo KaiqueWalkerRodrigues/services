@@ -453,7 +453,7 @@ export function DataTableColaboradores({
                           <button
                             type="button"
                             onClick={() => abrirVinculoGrupos(colaborador)}
-                            className="rounded-md border border-green-500/20 bg-green-500/10 p-1.5 text-green-300 transition-colors hover:bg-green-500/20 hover:text-white"
+                            className="rounded-md border border-blue-500/20 bg-blue-500/10 p-1.5 text-blue-300 transition-colors hover:bg-blue-500/20 hover:text-white"
                             title="Vincular Grupos"
                           >
                             <Users className="h-3.5 w-3.5" />

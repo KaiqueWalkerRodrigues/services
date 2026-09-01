@@ -190,7 +190,7 @@ export function VincularGruposColaboradorModal({
         <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
           {carregando ? (
             <div className="py-8 text-center text-sm text-zinc-400 flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-green-500" />
+              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
               Carregando grupos...
             </div>
           ) : grupos.length === 0 ? (
@@ -209,7 +209,7 @@ export function VincularGruposColaboradorModal({
                   onClick={() => !processando && handleToggleVinculo(grupo)}
                   className={`flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all ${
                     vinculada
-                      ? "border-green-500/50 bg-green-500/10 text-white"
+                      ? "border-blue-500/50 bg-blue-500/10 text-white"
                       : "border-white/5 bg-white/[0.02] text-zinc-300 hover:bg-white/[0.04]"
                   }`}
                 >
@@ -217,7 +217,7 @@ export function VincularGruposColaboradorModal({
                     <div
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                         vinculada
-                          ? "bg-green-500 text-white"
+                          ? "bg-blue-500 text-white"
                           : "bg-white/5 text-zinc-400"
                       }`}
                     >
@@ -232,9 +232,9 @@ export function VincularGruposColaboradorModal({
 
                   <div className="flex items-center gap-2 shrink-0">
                     {processando ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-green-400" />
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
                     ) : vinculada ? (
-                      <span className="flex items-center gap-1 text-xs font-medium text-green-400 bg-green-500/20 px-2.5 py-1 rounded-lg">
+                      <span className="flex items-center gap-1 text-xs font-medium text-blue-400 bg-blue-500/20 px-2.5 py-1 rounded-lg">
                         <Check className="h-3.5 w-3.5" /> Vinculado
                       </span>
                     ) : (
