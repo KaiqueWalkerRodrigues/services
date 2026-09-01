@@ -670,4 +670,101 @@ class Colaborador
             ];
         }
     }
+
+    public function adicionarGrupo($id_colaborador, $id_grupo)
+    {
+        try {
+            $sqlCheck = "SELECT id_colaborador_grupo FROM colaboradores_grupos 
+                         WHERE id_colaborador = :id_colaborador AND id_grupo = :id_grupo AND deleted_at IS NULL
+                         LIMIT 1";
+            $stmtCheck = $this->pdo->prepare($sqlCheck);
+            $stmtCheck->bindParam(':id_colaborador', $id_colaborador);
+            $stmtCheck->bindParam(':id_grupo', $id_grupo);
+            $stmtCheck->execute();
+
+            if ($stmtCheck->fetch()) {
+                return ['status' => 'erro', 'mensagem' => 'Este colaborador já está vinculado a este grupo.'];
+            }
+
+            $sql = "INSERT INTO colaboradores_grupos (id_colaborador, id_grupo, created_at) 
+                    VALUES (:id_colaborador, :id_grupo, NOW())";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+            $stmt->bindParam(':id_grupo', $id_grupo);
+            $stmt->execute();
+
+            return [
+                'status' => 'sucesso',
+                'mensagem' => 'Grupo adicionado ao colaborador com sucesso!',
+                'id' => $this->pdo->lastInsertId()
+            ];
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return ['status' => 'erro', 'mensagem' => 'Erro ao adicionar grupo ao colaborador: ' . $e->getMessage()];
+        }
+    }
+
+    public function removerGrupo($id_colaborador, $id_grupo)
+    {
+        try {
+            $sql = "UPDATE colaboradores_grupos 
+                    SET deleted_at = NOW() 
+                    WHERE id_colaborador = :id_colaborador 
+                    AND id_grupo = :id_grupo 
+                    AND deleted_at IS NULL";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_colaborador', $id_colaborador);
+            $stmt->bindParam(':id_grupo', $id_grupo);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                return ['status' => 'sucesso', 'mensagem' => 'Grupo removido do colaborador com sucesso!'];
+            }
+
+            return ['status' => 'erro', 'mensagem' => 'Vínculo com o grupo não encontrado ou já removido.'];
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return ['status' => 'erro', 'mensagem' => 'Erro ao remover grupo do colaborador: ' . $e->getMessage()];
+        }
+    }
+
+    public function listarGruposColaborador($id_colaborador)
+    {
+        try {
+            $sql = "SELECT g.*, cg.id_colaborador_grupo, cg.created_at as vinculado_em 
+                    FROM colaboradores_grupos cg
+                    INNER JOIN grupos g ON cg.id_grupo = g.id_grupo
+                    WHERE cg.id_colaborador = :id_colaborador 
+                    AND cg.deleted_at IS NULL
+                    AND g.deleted_at IS NULL
+                    ORDER BY g.nome ASC";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id_colaborador', $id_colaborador, PDO::PARAM_INT);
+            $stmt->execute();
+            $dados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($dados) {
+                return [
+                    'status' => 'sucesso',
+                    'total' => count($dados),
+                    'dados' => $dados
+                ];
+            }
+
+            return [
+                'status' => 'sucesso',
+                'total' => 0,
+                'dados' => [],
+                'mensagem' => 'Nenhum grupo encontrado para este colaborador.'
+            ];
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return [
+                'status' => 'erro',
+                'mensagem' => 'Erro ao buscar os grupos do colaborador: ' . $e->getMessage()
+            ];
+        }
+    }
 }

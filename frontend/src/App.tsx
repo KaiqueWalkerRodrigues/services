@@ -18,6 +18,7 @@ import PaginaColaboradores from "./pages/admin/Colaboradores";
 import PaginaColaboradorFilial from "./pages/colaborador/parametros/Filiais";
 import PaginaColaboradorServicos from "./pages/colaborador/parametros/Servicos";
 import PaginaParametrosGerais from "./pages/colaborador/parametros/ParametrosGerais";
+import PaginaColaboradorGrupos from "./pages/colaborador/parametros/Grupos";
 
 const nome = "Barb | ";
 
@@ -113,6 +114,17 @@ export default function App() {
               <ProtectedRouteColaborador>
                 <PageTitle title={nome + "Filiais"}>
                   <PaginaColaboradorFilial />
+                </PageTitle>
+              </ProtectedRouteColaborador>
+            }
+          />
+
+          <Route
+            path="/parametros/grupos"
+            element={
+              <ProtectedRouteColaborador>
+                <PageTitle title={nome + "Grupos"}>
+                  <PaginaColaboradorGrupos />
                 </PageTitle>
               </ProtectedRouteColaborador>
             }

@@ -58,6 +58,19 @@ switch ($metodo) {
                 echo json_encode(["status" => "erro", "mensagem" => "Não autorizado"]);
             }
             break;
+        } elseif ($subpath === 'listarGruposColaborador') {
+            if (!isset($_GET['id_colaborador'])) {
+                http_response_code(400);
+                echo json_encode(["status" => "erro", "mensagem" => "O parâmetro id_colaborador é obrigatório"]);
+                break;
+            }
+            if ($loginValido) {
+                echo json_encode($colaborador->listarGruposColaborador($_GET['id_colaborador']));
+            } else {
+                http_response_code(401);
+                echo json_encode(["status" => "erro", "mensagem" => "Não autorizado"]);
+            }
+            break;
         } else {
             if (isset($_GET['id'])) {
                 echo json_encode($colaborador->mostrar($_GET['id']));
@@ -74,6 +87,8 @@ switch ($metodo) {
             echo json_encode($colaborador->adicionarEmpresa($data->id_colaborador, $data->id_empresa));
         } elseif ($subpath === 'adicionarFilial' && isset($data->id_filial) && isset($data->id_colaborador)) {
             echo json_encode($colaborador->adicionarFilial($data->id_colaborador, $data->id_filial));
+        } elseif ($subpath === 'adicionarGrupo' && isset($data->id_grupo) && isset($data->id_colaborador)) {
+            echo json_encode($colaborador->adicionarGrupo($data->id_colaborador, $data->id_grupo));
         } else {
             echo json_encode($colaborador->cadastrar($data->id_empresa ?? null, $data->nome, $data->login, $data->senha));
         }
@@ -115,6 +130,8 @@ switch ($metodo) {
             echo json_encode($colaborador->removerEmpresa($data->id_colaborador, $data->id_empresa));
         } elseif ($subpath === 'removerFilial' && isset($data->id_filial) && isset($data->id_colaborador)) {
             echo json_encode($colaborador->removerFilial($data->id_colaborador, $data->id_filial));
+        } elseif ($subpath === 'removerGrupo' && isset($data->id_grupo) && isset($data->id_colaborador)) {
+            echo json_encode($colaborador->removerGrupo($data->id_colaborador, $data->id_grupo));
         } else {
             echo json_encode($colaborador->deletar($data->id_colaborador ?? null));
         }

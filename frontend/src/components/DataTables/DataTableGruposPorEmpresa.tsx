@@ -3,45 +3,43 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import {
-  UserCircle2,
+  Layers,
   Calendar,
   Edit,
+  Trash2,
   Search,
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
-  Shield,
-  Trash2,
-  Link2,
-  Users,
+  ShieldCheck,
 } from "lucide-react";
 
 import apiFetch from "../../config/apiFetch";
 import { Button } from "../Button";
-import { EditarColaboradorModal } from "../Modal/EditarColaboradorViaColaboradorModal";
-import { VincularFiliaisColaboradorModal } from "../Modal/VincularFiliaisColaboradoesModal";
-import { VincularGruposColaboradorModal } from "../Modal/VincularGruposColaboradorModal";
+import { EditarGrupoModal } from "../Modal/EditarGrupoViaColaboradorModa";
+import { DeletarGrupoModal } from "../Modal/DeletarGrupoViaColaboradorModal";
+import { GrupoPermissoesModal } from "../Modal/GrupoPermissoesModal";
 
-interface Colaborador {
+interface Grupo {
   id: string;
+  id_empresa?: string | number;
   nome: string;
-  login?: string;
   criadoEm?: string;
 }
 
-interface ColaboradorApi {
-  id_colaborador?: string | number;
+interface GrupoApi {
+  id_grupo?: string | number;
   id?: string | number;
+  id_empresa?: string | number;
   nome?: string;
-  login?: string;
   created_at?: string;
   criadoEm?: string;
 }
 
-interface DataTableColaboradoresProps {
-  empresaId: string;
-  onEditar?: (colaborador: Colaborador) => void;
-  onEliminar?: (colaborador: Colaborador) => void;
+interface DataTableGruposPorEmpresaProps {
+  empresaId: string | number | undefined;
+  onEditar?: (grupo: Grupo) => void;
+  onEliminar?: (grupo: Grupo) => void;
   refreshKey?: number;
   itensPorPagina?: number;
 }
@@ -50,14 +48,14 @@ type Ordenacao = "nome-asc" | "nome-desc" | "recente" | "antigo";
 
 const ALTURA_LINHA_PADRAO = 44;
 
-export function DataTableColaboradores({
+export function DataTableGruposPorEmpresa({
   empresaId,
   onEditar,
   onEliminar,
   refreshKey = 0,
   itensPorPagina = 10,
-}: DataTableColaboradoresProps) {
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
+}: DataTableGruposPorEmpresaProps) {
+  const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [carregando, setCarregando] = useState(true);
 
   const [busca, setBusca] = useState("");
@@ -65,18 +63,14 @@ export function DataTableColaboradores({
   const [paginaAtual, setPaginaAtual] = useState(1);
 
   const [internalRefreshKey, setInternalRefreshKey] = useState(0);
-
-  const [colaboradorEditando, setColaboradorEditando] =
-    useState<Colaborador | null>(null);
+  const [grupoEditando, setGrupoEditando] = useState<Grupo | null>(null);
   const [modalEditarAberto, setModalEditarAberto] = useState(false);
 
-  const [colaboradorVinculando, setColaboradorVinculando] =
-    useState<Colaborador | null>(null);
-  const [modalVincularAberto, setModalVincularAberto] = useState(false);
+  const [grupoExcluindo, setGrupoExcluindo] = useState<Grupo | null>(null);
+  const [modalDeletarAberto, setModalDeletarAberto] = useState(false);
 
-  const [colaboradorVinculandoGrupos, setColaboradorVinculandoGrupos] =
-    useState<Colaborador | null>(null);
-  const [modalVincularGruposAberto, setModalVincularGruposAberto] =
+  const [grupoParametros, setGrupoParametros] = useState<Grupo | null>(null);
+  const [modalGrupoPermissoesAberto, setmodalGrupoPermissoesAberto] =
     useState(false);
 
   const areaTabelaRef = useRef<HTMLDivElement>(null);
@@ -86,14 +80,14 @@ export function DataTableColaboradores({
   const [linhasPorPagina, setLinhasPorPagina] = useState(itensPorPagina);
   const alturaLinhaRef = useRef(ALTURA_LINHA_PADRAO);
 
-  const abrirEdicao = (colaborador: Colaborador) => {
-    setColaboradorEditando(colaborador);
+  const abrirEdicao = (grupo: Grupo) => {
+    setGrupoEditando(grupo);
     setModalEditarAberto(true);
   };
 
   const fecharEdicao = () => {
     setModalEditarAberto(false);
-    setColaboradorEditando(null);
+    setGrupoEditando(null);
   };
 
   const handleEdicaoSucesso = () => {
@@ -101,32 +95,29 @@ export function DataTableColaboradores({
     setInternalRefreshKey((prev) => prev + 1);
   };
 
-  const abrirVinculo = (colaborador: Colaborador) => {
-    setColaboradorVinculando(colaborador);
-    setModalVincularAberto(true);
+  const abrirExclusao = (grupo: Grupo) => {
+    setGrupoExcluindo(grupo);
+    setModalDeletarAberto(true);
   };
 
-  const fecharVinculo = () => {
-    setModalVincularAberto(false);
-    setColaboradorVinculando(null);
+  const fecharExclusao = () => {
+    setModalDeletarAberto(false);
+    setGrupoExcluindo(null);
   };
 
-  const handleVinculoSucesso = () => {
+  const handleExclusaoSucesso = () => {
+    fecharExclusao();
     setInternalRefreshKey((prev) => prev + 1);
   };
 
-  const abrirVinculoGrupos = (colaborador: Colaborador) => {
-    setColaboradorVinculandoGrupos(colaborador);
-    setModalVincularGruposAberto(true);
+  const abrirParametros = (grupo: Grupo) => {
+    setGrupoParametros(grupo);
+    setmodalGrupoPermissoesAberto(true);
   };
 
-  const fecharVinculoGrupos = () => {
-    setModalVincularGruposAberto(false);
-    setColaboradorVinculandoGrupos(null);
-  };
-
-  const handleVinculoGruposSucesso = () => {
-    setInternalRefreshKey((prev) => prev + 1);
+  const fecharGrupoPermissoes = () => {
+    setmodalGrupoPermissoesAberto(false);
+    setGrupoParametros(null);
   };
 
   useEffect(() => {
@@ -137,10 +128,9 @@ export function DataTableColaboradores({
       const alturaThead = theadRef.current?.offsetHeight ?? 40;
       const alturaLinha =
         primeiraLinhaRef.current?.offsetHeight || alturaLinhaRef.current;
-
       alturaLinhaRef.current = alturaLinha;
-      const alturaDisponivel = areaEl.clientHeight - alturaThead;
 
+      const alturaDisponivel = areaEl.clientHeight - alturaThead;
       const linhas = Math.max(
         3,
         Math.floor((alturaDisponivel + 10) / alturaLinha),
@@ -152,7 +142,6 @@ export function DataTableColaboradores({
     recalcular();
     const observer = new ResizeObserver(recalcular);
     observer.observe(areaEl);
-
     return () => observer.disconnect();
   }, []);
 
@@ -163,7 +152,6 @@ export function DataTableColaboradores({
 
     const alturaThead = theadRef.current?.offsetHeight ?? 40;
     const alturaLinha = primeiraLinhaRef.current.offsetHeight;
-
     if (!alturaLinha) return;
 
     alturaLinhaRef.current = alturaLinha;
@@ -171,10 +159,10 @@ export function DataTableColaboradores({
     const linhas = Math.max(3, Math.floor(alturaDisponivel / alturaLinha));
 
     setLinhasPorPagina((atual) => (atual === linhas ? atual : linhas));
-  }, [carregando, colaboradores.length]);
+  }, [carregando, grupos.length]);
 
   useEffect(() => {
-    async function carregarColaboradores() {
+    async function carregarGrupos() {
       if (!empresaId) {
         setCarregando(false);
         return;
@@ -182,48 +170,45 @@ export function DataTableColaboradores({
 
       try {
         setCarregando(true);
-
+        // Ajuste o endpoint conforme a sua API de backend
         const response = await apiFetch.get(
-          `/api/colaboradores/listarPorEmpresa?empresa=${empresaId}`,
+          `/api/grupos/listarPorEmpresa?empresa=${empresaId}`,
         );
 
         const dadosBrutos =
-          response.data?.exists?.dados || response.data?.dados || [];
+          response.data?.exists?.dados || response.data?.dados;
+        const itens = Array.isArray(dadosBrutos) ? dadosBrutos : [];
 
-        const colaboradoresFormatados: Colaborador[] = Array.from(
-          new Map(
-            dadosBrutos.map((item: ColaboradorApi) => {
-              const colaborador = {
-                id: String(item.id_colaborador || item.id),
+        const gruposFormatados: Grupo[] = Array.from(
+          new Map<string, Grupo>(
+            (itens as GrupoApi[]).map((item) => {
+              const grupo = {
+                id: String(item.id_grupo || item.id),
+                id_empresa: item.id_empresa || empresaId,
                 nome: item.nome || "",
-                login: item.login,
                 criadoEm: item.created_at || item.criadoEm,
               };
-
-              return [colaborador.id, colaborador] as const;
+              return [grupo.id, grupo] as const;
             }),
           ).values(),
         );
 
-        setColaboradores(colaboradoresFormatados);
+        setGrupos(gruposFormatados);
       } catch (error) {
-        console.error("Erro ao carregar colaboradores da empresa:", error);
+        console.error("Erro ao carregar grupos da empresa:", error);
       } finally {
         setCarregando(false);
       }
     }
 
-    carregarColaboradores();
+    carregarGrupos();
   }, [empresaId, refreshKey, internalRefreshKey]);
 
-  const colaboradoresFiltrados = useMemo(() => {
-    return colaboradores
-      .filter((colaborador) => {
+  const gruposFiltrados = useMemo(() => {
+    return grupos
+      .filter((grupo) => {
         const termo = busca.toLowerCase();
-        const nomeMatch = colaborador.nome?.toLowerCase().includes(termo);
-        const loginMatch = colaborador.login?.toLowerCase().includes(termo);
-
-        return nomeMatch || loginMatch;
+        return grupo.nome?.toLowerCase().includes(termo);
       })
       .sort((a, b) => {
         if (ordenacao === "nome-asc") {
@@ -244,19 +229,19 @@ export function DataTableColaboradores({
         }
         return 0;
       });
-  }, [colaboradores, busca, ordenacao]);
+  }, [grupos, busca, ordenacao]);
 
   const totalPaginas = Math.max(
     1,
-    Math.ceil(colaboradoresFiltrados.length / linhasPorPagina),
+    Math.ceil(gruposFiltrados.length / linhasPorPagina),
   );
 
   const paginaVisivel = Math.min(paginaAtual, totalPaginas);
 
-  const colaboradoresPaginados = useMemo(() => {
+  const gruposPaginados = useMemo(() => {
     const inicio = (paginaVisivel - 1) * linhasPorPagina;
-    return colaboradoresFiltrados.slice(inicio, inicio + linhasPorPagina);
-  }, [colaboradoresFiltrados, paginaVisivel, linhasPorPagina]);
+    return gruposFiltrados.slice(inicio, inicio + linhasPorPagina);
+  }, [gruposFiltrados, paginaVisivel, linhasPorPagina]);
 
   return (
     <>
@@ -271,23 +256,8 @@ export function DataTableColaboradores({
                 setBusca(e.target.value);
                 setPaginaAtual(1);
               }}
-              placeholder="Buscar por nome ou login..."
-              className="
-                w-full
-                rounded-xl
-                border border-white/5
-                bg-white/[0.03]
-                py-1.5
-                pl-10
-                pr-4
-                text-sm
-                text-white
-                placeholder-zinc-500
-                outline-none
-                transition-colors
-                focus:border-violet-500/50
-                focus:bg-white/[0.05]
-              "
+              placeholder="Buscar grupo por nome..."
+              className="w-full rounded-xl border border-white/5 bg-white/[0.03] py-1.5 pl-10 pr-4 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-violet-500/50 focus:bg-white/[0.05]"
             />
           </div>
 
@@ -299,19 +269,7 @@ export function DataTableColaboradores({
                 setOrdenacao(e.target.value as Ordenacao);
                 setPaginaAtual(1);
               }}
-              className="
-                cursor-pointer
-                rounded-xl
-                border border-white/5
-                bg-white/[0.03]
-                px-2.5
-                py-1.5
-                text-sm
-                text-zinc-300
-                outline-none
-                transition-colors
-                focus:border-violet-500/50
-              "
+              className="cursor-pointer rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-1.5 text-sm text-zinc-300 outline-none transition-colors focus:border-violet-500/50"
             >
               <option value="nome-asc" className="bg-[#09090f] text-white">
                 Nome (A-Z)
@@ -329,41 +287,16 @@ export function DataTableColaboradores({
           </div>
         </div>
 
-        <div
-          className="
-            flex
-            flex-1
-            min-h-0
-            flex-col
-            overflow-hidden
-            rounded-2xl
-            border border-white/5
-            bg-white/[0.03]
-          "
-        >
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-2xl border border-white/5 bg-white/[0.03]">
           <div ref={areaTabelaRef} className="flex-1 overflow-hidden">
             <table className="w-full table-fixed border-collapse text-left">
               <thead ref={theadRef} className="bg-[#0c0c14] shadow-sm">
-                <tr
-                  className="
-                    border-b border-white/5
-                    text-[11px]
-                    font-semibold
-                    uppercase
-                    tracking-widest
-                    text-zinc-500
-                  "
-                >
-                  <th className="w-[45%] px-3 py-2.5 sm:w-[35%]">
-                    Colaborador
-                  </th>
-                  <th className="hidden px-3 py-2.5 sm:table-cell sm:w-[32%]">
-                    Login
-                  </th>
-                  <th className="hidden px-3 py-2.5 lg:table-cell lg:w-[16%]">
+                <tr className="border-b border-white/5 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
+                  <th className="w-[50%] px-3 py-2.5 sm:w-[50%]">Grupo</th>
+                  <th className="hidden px-3 py-2.5 sm:table-cell sm:w-[35%]">
                     Cadastro
                   </th>
-                  <th className="w-[35%] px-3 py-2.5 text-right sm:w-[17%]">
+                  <th className="w-[50%] px-3 py-2.5 text-right sm:w-[15%]">
                     Ações
                   </th>
                 </tr>
@@ -373,75 +306,46 @@ export function DataTableColaboradores({
                 {carregando ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={3}
                       className="py-8 text-center text-sm text-zinc-400"
                     >
-                      Carregando colaboradores...
+                      Carregando grupos...
                     </td>
                   </tr>
-                ) : colaboradoresPaginados.length === 0 ? (
+                ) : gruposPaginados.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={3}
                       className="py-8 text-center text-sm text-zinc-500"
                     >
-                      Nenhum colaborador corresponde à sua busca.
+                      Nenhum grupo corresponde à sua busca.
                     </td>
                   </tr>
                 ) : (
-                  colaboradoresPaginados.map((colaborador, index) => (
+                  gruposPaginados.map((grupo, index) => (
                     <tr
-                      key={colaborador.id}
+                      key={grupo.id}
                       ref={index === 0 ? primeiraLinhaRef : undefined}
                       className="transition-colors hover:bg-white/[0.02]"
                     >
                       <td className="truncate px-3 py-2.5">
                         <div className="flex min-w-0 items-center gap-2">
-                          <div
-                            className="
-                              flex
-                              h-7
-                              w-7
-                              shrink-0
-                              items-center
-                              justify-center
-                              rounded-lg
-                              bg-violet-500/10
-                              text-violet-400
-                            "
-                          >
-                            <UserCircle2 className="h-4 w-4" />
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
+                            <Layers className="h-4 w-4" />
                           </div>
-
                           <div className="min-w-0">
                             <p className="truncate font-semibold text-white">
-                              {colaborador.nome}
+                              {grupo.nome}
                             </p>
-                            {colaborador.login && (
-                              <p className="truncate text-xs text-zinc-500 sm:hidden">
-                                {colaborador.login}
-                              </p>
-                            )}
                           </div>
                         </div>
                       </td>
 
-                      <td className="hidden truncate px-3 py-2.5 sm:table-cell">
-                        {colaborador.login && (
-                          <span className="flex items-center gap-1.5 truncate text-xs text-zinc-400">
-                            <Shield className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-                            <span className="truncate">
-                              {colaborador.login}
-                            </span>
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="hidden truncate px-3 py-2.5 text-xs text-zinc-400 lg:table-cell">
+                      <td className="hidden truncate px-3 py-2.5 text-xs text-zinc-400 sm:table-cell">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-                          {colaborador.criadoEm
-                            ? new Date(colaborador.criadoEm).toLocaleDateString(
+                          {grupo.criadoEm
+                            ? new Date(grupo.criadoEm).toLocaleDateString(
                                 "pt-BR",
                               )
                             : "-"}
@@ -452,41 +356,33 @@ export function DataTableColaboradores({
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
-                            onClick={() => abrirVinculoGrupos(colaborador)}
-                            className="rounded-md border border-green-500/20 bg-green-500/10 p-1.5 text-green-300 transition-colors hover:bg-green-500/20 hover:text-white"
-                            title="Vincular Grupos"
-                          >
-                            <Users className="h-3.5 w-3.5" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => abrirVinculo(colaborador)}
+                            onClick={() => abrirParametros(grupo)}
                             className="rounded-md border border-violet-500/20 bg-violet-500/10 p-1.5 text-violet-300 transition-colors hover:bg-violet-500/20 hover:text-white"
-                            title="Vincular Filiais"
+                            title="Permissões"
                           >
-                            <Link2 className="h-3.5 w-3.5" />
+                            <ShieldCheck className="h-3.5 w-3.5" />
                           </button>
-
                           <Button
                             type="button"
                             size="table"
                             variant="tableEdit"
                             onClick={() => {
-                              abrirEdicao(colaborador);
-                              onEditar?.(colaborador);
+                              abrirEdicao(grupo);
+                              onEditar?.(grupo);
                             }}
                             title="Editar"
                           >
                             <Edit className="h-3.5 w-3.5" />
                           </Button>
-
                           <Button
                             type="button"
                             size="table"
                             variant="tableDelete"
-                            onClick={() => onEliminar?.(colaborador)}
-                            title="Remover"
+                            onClick={() => {
+                              abrirExclusao(grupo);
+                              onEliminar?.(grupo);
+                            }}
+                            title="Excluir"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -499,29 +395,16 @@ export function DataTableColaboradores({
             </table>
           </div>
 
-          {!carregando && colaboradoresFiltrados.length > 0 && (
-            <div
-              className="
-                flex
-                shrink-0
-                flex-wrap
-                items-center
-                justify-between
-                gap-2
-                border-t border-white/5
-                bg-white/[0.01]
-                px-3
-                py-2
-              "
-            >
+          {!carregando && gruposFiltrados.length > 0 && (
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/5 bg-white/[0.01] px-3 py-2">
               <span className="text-xs text-zinc-500">
                 Mostrando {(paginaVisivel - 1) * linhasPorPagina + 1}
                 {"–"}
                 {Math.min(
                   paginaVisivel * linhasPorPagina,
-                  colaboradoresFiltrados.length,
+                  gruposFiltrados.length,
                 )}{" "}
-                de {colaboradoresFiltrados.length} colaboradores
+                de {gruposFiltrados.length} grupos
               </span>
 
               <div className="flex items-center gap-1">
@@ -529,21 +412,7 @@ export function DataTableColaboradores({
                   type="button"
                   onClick={() => setPaginaAtual((p) => Math.max(1, p - 1))}
                   disabled={paginaVisivel === 1}
-                  className="
-                    flex
-                    h-7
-                    w-7
-                    items-center
-                    justify-center
-                    rounded-lg
-                    border border-white/5
-                    bg-white/[0.03]
-                    text-zinc-300
-                    transition-colors
-                    hover:bg-white/10
-                    disabled:cursor-not-allowed
-                    disabled:opacity-30
-                  "
+                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/5 bg-white/[0.03] text-zinc-300 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
                   title="Página anterior"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -560,21 +429,7 @@ export function DataTableColaboradores({
                     setPaginaAtual((p) => Math.min(totalPaginas, p + 1))
                   }
                   disabled={paginaVisivel === totalPaginas}
-                  className="
-                    flex
-                    h-7
-                    w-7
-                    items-center
-                    justify-center
-                    rounded-lg
-                    border border-white/5
-                    bg-white/[0.03]
-                    text-zinc-300
-                    transition-colors
-                    hover:bg-white/10
-                    disabled:cursor-not-allowed
-                    disabled:opacity-30
-                  "
+                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/5 bg-white/[0.03] text-zinc-300 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
                   title="Próxima página"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -585,27 +440,24 @@ export function DataTableColaboradores({
         </div>
       </div>
 
-      <EditarColaboradorModal
+      <EditarGrupoModal
         isOpen={modalEditarAberto}
         onClose={fecharEdicao}
         onSuccess={handleEdicaoSucesso}
-        colaborador={colaboradorEditando}
+        grupo={grupoEditando}
       />
 
-      <VincularFiliaisColaboradorModal
-        isOpen={modalVincularAberto}
-        onClose={fecharVinculo}
-        onSuccess={handleVinculoSucesso}
-        colaborador={colaboradorVinculando}
-        empresaId={empresaId}
+      <DeletarGrupoModal
+        isOpen={modalDeletarAberto}
+        onClose={fecharExclusao}
+        onSuccess={handleExclusaoSucesso}
+        grupo={grupoExcluindo}
       />
 
-      <VincularGruposColaboradorModal
-        isOpen={modalVincularGruposAberto}
-        onClose={fecharVinculoGrupos}
-        onSuccess={handleVinculoGruposSucesso}
-        colaborador={colaboradorVinculandoGrupos}
-        empresaId={empresaId}
+      <GrupoPermissoesModal
+        isOpen={modalGrupoPermissoesAberto}
+        onClose={fecharGrupoPermissoes}
+        grupo={grupoParametros}
       />
     </>
   );

@@ -175,6 +175,33 @@ $rotas = [
         ],
         'permissoes' => null
     ],
+
+    // grupos
+    'api/grupos' => [
+        'file' => 'grupos.php',
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+            'DELETE' => true,
+            'POST' => true,
+            'default' => true
+        ],
+        'permissoes' => null
+    ],
+
+    // permissoes
+    'api/permissoes' => [
+        'file' => 'permissoes.php',
+        'login' => [
+            'GET' => true,
+            'PUT' => true,
+            'DELETE' => true,
+            'POST' => true,
+            'default' => true
+        ],
+        'permissoes' => null
+    ],
+
 ];
 
 // 3. Processamento da Rota
