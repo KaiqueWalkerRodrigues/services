@@ -25,8 +25,7 @@ export function CadastrarServicoModal({
   const empresaId = empresaIdProp || usuario?.id_empresa;
 
   const [nome, setNome] = useState("");
-  const [peso, setPeso] = useState("");
-  const [valor, setValor] = useState("");
+  const [descricao, setDescricao] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,8 +45,7 @@ export function CadastrarServicoModal({
       await apiFetch.post("/api/servicos", {
         id_empresa: empresaId,
         nome,
-        peso: peso ? Number(peso) : null,
-        valor: valor ? Number(valor) : null,
+        descricao,
       });
 
       showToast({
@@ -59,7 +57,6 @@ export function CadastrarServicoModal({
       onClose();
 
       setNome("");
-      setPeso("");
       setValor("");
     } catch (error) {
       console.error("Erro ao cadastrar serviço:", error);
@@ -103,35 +100,17 @@ export function CadastrarServicoModal({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-1">
           <div>
             <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-              Peso
+              Descricao
             </label>
 
-            <input
-              type="number"
-              step="any"
-              placeholder="Ex: 1.0"
+            <textarea
               className={inputClass}
-              value={peso}
-              onChange={(e) => setPeso(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-              Valor (R$)
-            </label>
-
-            <input
-              type="number"
-              step="0.01"
-              placeholder="Ex: 150.00"
-              className={inputClass}
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-            />
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+            ></textarea>
           </div>
         </div>
 

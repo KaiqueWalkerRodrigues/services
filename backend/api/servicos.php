@@ -87,13 +87,12 @@ switch ($metodo) {
             break;
         }
 
-        // Cadastro padrão de serviço: nome, peso, valor
+        // Cadastro padrão de serviço: nome, descricao
         if ($loginValido) {
             echo json_encode($servico->cadastrar(
                 $data->id_empresa ?? null,
                 $data->nome ?? null,
-                $data->peso ?? null,
-                $data->valor ?? null
+                $data->descricao ?? null
             ));
         } else {
             http_response_code(401);
@@ -102,14 +101,13 @@ switch ($metodo) {
         break;
 
     case 'PUT':
-        // Edição de serviço: id_servico, nome, peso, valor
+        // Edição de serviço: id_servico, nome, descricao
         $data = json_decode(file_get_contents("php://input"));
         if ($loginValido) {
             echo json_encode($servico->editar(
                 $data->id_servico ?? null,
                 $data->nome ?? null,
-                $data->peso ?? null,
-                $data->valor ?? null
+                $data->descricao ?? null
             ));
         } else {
             http_response_code(401);

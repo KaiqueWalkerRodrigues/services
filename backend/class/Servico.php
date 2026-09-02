@@ -15,7 +15,7 @@ class Servico
         }
     }
 
-    public function cadastrar($id_empresa, $nome, $peso, $valor)
+    public function cadastrar($id_empresa, $nome, $descricao)
     {
         try {
             if (empty($id_empresa)) {
@@ -23,14 +23,13 @@ class Servico
                 return ['status' => 'erro', 'mensagem' => 'O ID da empresa é obrigatório.'];
             }
 
-            $sql = "INSERT INTO servicos (id_empresa, nome, peso, valor, created_at, updated_at) 
-                    VALUES (:id_empresa, :nome, :peso, :valor, NOW(), NOW())";
+            $sql = "INSERT INTO servicos (id_empresa, nome, descricao, created_at, updated_at) 
+                    VALUES (:id_empresa, :nome, :descricao, NOW(), NOW())";
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindParam(':id_empresa', $id_empresa);
             $stmt->bindParam(':nome', $nome);
-            $stmt->bindParam(':peso', $peso);
-            $stmt->bindParam(':valor', $valor);
+            $stmt->bindParam(':descricao', $descricao);
             $stmt->execute();
 
             return [
@@ -47,18 +46,17 @@ class Servico
         }
     }
 
-    public function editar($id_servico, $nome, $peso, $valor)
+    public function editar($id_servico, $nome, $descricao)
     {
         try {
             $sql = "UPDATE servicos 
-                    SET nome = :nome, peso = :peso, valor = :valor, updated_at = NOW() 
+                    SET nome = :nome, descricao = :descricao, updated_at = NOW() 
                     WHERE id_servico = :id_servico AND deleted_at IS NULL";
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindParam(':id_servico', $id_servico);
             $stmt->bindParam(':nome', $nome);
-            $stmt->bindParam(':peso', $peso);
-            $stmt->bindParam(':valor', $valor);
+            $stmt->bindParam(':descricao', $descricao);
             $stmt->execute();
 
             if ($stmt->rowCount() > 0) {

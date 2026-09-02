@@ -9,8 +9,7 @@ import { showToast } from "../Toast";
 interface Servico {
   id: string;
   nome: string;
-  peso?: number | string;
-  valor?: number | string;
+  descricao?: string;
   criadoEm?: string;
 }
 
@@ -28,29 +27,18 @@ export function EditarServicoModal({
   servico,
 }: EditarServicoModalProps) {
   const [nome, setNome] = useState("");
-  const [peso, setPeso] = useState("");
-  const [valor, setValor] = useState("");
+  const [descricao, setDescricao] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!servico) {
       setNome("");
-      setPeso("");
-      setValor("");
+      setDescricao("");
       return;
     }
 
     setNome(servico.nome || "");
-    setPeso(
-      servico.peso !== undefined && servico.peso !== null
-        ? String(servico.peso)
-        : "",
-    );
-    setValor(
-      servico.valor !== undefined && servico.valor !== null
-        ? String(servico.valor)
-        : "",
-    );
+    setDescricao(servico.descricao || "");
   }, [servico]);
 
   const inputClass =
@@ -73,8 +61,7 @@ export function EditarServicoModal({
       const payload: any = {
         id_servico: servico.id,
         nome,
-        peso: peso ? Number(peso) : null,
-        valor: valor ? Number(valor) : null,
+        descricao,
       };
 
       await apiFetch.put(`/api/servicos/${servico.id}`, payload);
@@ -121,34 +108,17 @@ export function EditarServicoModal({
           />
         </div>
 
-        {/* Peso e Valor */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/*  Descrição */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-1">
           <div>
             <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-              Peso
+              Descrição
             </label>
-            <input
-              type="number"
-              step="any"
-              placeholder="Ex: 1.0"
+            <textarea
               className={inputClass}
-              value={peso}
-              onChange={(e) => setPeso(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-              Valor (R$)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              placeholder="Ex: 150.00"
-              className={inputClass}
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-            />
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+            ></textarea>
           </div>
         </div>
 

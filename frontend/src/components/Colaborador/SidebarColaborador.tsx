@@ -32,7 +32,7 @@ interface NavItemType {
 
 const hubItems: NavItemType[] = [
   { label: "Home", to: "/home", icon: House },
-  { label: "Dashboard", to: "/dashboard", icon: LayoutGrid },
+  // { label: "Dashboard", to: "/dashboard", icon: LayoutGrid },
   {
     label: "Gerenciamento",
     icon: Folder,
