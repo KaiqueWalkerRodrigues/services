@@ -24,6 +24,7 @@ interface Grupo {
   id: string;
   id_empresa?: string | number;
   nome: string;
+  prestador?: boolean | number | string;
   criadoEm?: string;
 }
 
@@ -32,6 +33,7 @@ interface GrupoApi {
   id?: string | number;
   id_empresa?: string | number;
   nome?: string;
+  prestador?: boolean | number | string;
   created_at?: string;
   criadoEm?: string;
 }
@@ -186,6 +188,10 @@ export function DataTableGruposPorEmpresa({
                 id: String(item.id_grupo || item.id),
                 id_empresa: item.id_empresa || empresaId,
                 nome: item.nome || "",
+                prestador:
+                  item.prestador === true ||
+                  item.prestador === 1 ||
+                  item.prestador === "1",
                 criadoEm: item.created_at || item.criadoEm,
               };
               return [grupo.id, grupo] as const;
@@ -337,6 +343,11 @@ export function DataTableGruposPorEmpresa({
                             <p className="truncate font-semibold text-white">
                               {grupo.nome}
                             </p>
+                            {grupo.prestador && (
+                              <span className="text-[10px] text-violet-300">
+                                Prestador
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>

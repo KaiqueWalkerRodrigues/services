@@ -25,6 +25,7 @@ export function CadastrarGrupoModal({
   const empresaId = empresaIdProp || usuario?.id_empresa;
 
   const [nome, setNome] = useState("");
+  const [prestador, setPrestador] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,6 +45,7 @@ export function CadastrarGrupoModal({
       await apiFetch.post("/api/grupos", {
         id_empresa: empresaId,
         nome,
+        prestador,
       });
 
       showToast({
@@ -54,6 +56,7 @@ export function CadastrarGrupoModal({
       onSuccess();
       onClose();
       setNome("");
+      setPrestador(false);
     } catch (error) {
       console.error("Erro ao cadastrar grupo:", error);
 
@@ -95,6 +98,16 @@ export function CadastrarGrupoModal({
             onChange={(e) => setNome(e.target.value)}
           />
         </div>
+
+        <label className="flex items-center gap-2 text-sm text-zinc-300">
+          <input
+            type="checkbox"
+            checked={prestador}
+            onChange={(e) => setPrestador(e.target.checked)}
+            className="h-4 w-4 rounded border-white/10 bg-white/[0.03] text-violet-600 focus:ring-violet-500"
+          />
+          Grupo prestador
+        </label>
 
         <div className="border-t border-white/5 pt-4">
           <div className="flex items-center justify-end gap-2">

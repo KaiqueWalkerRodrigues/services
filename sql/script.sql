@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS `barb`.`grupos` (
   `id_grupo` INT NOT NULL AUTO_INCREMENT,
   `id_empresa` INT NOT NULL,
   `nome` VARCHAR(150) NOT NULL,
+  `prestador` TINYINT(1) NOT NULL DEFAULT 0,
   `created_at` TIMESTAMP NOT NULL,
   `updated_at` TIMESTAMP NOT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,

@@ -9,6 +9,7 @@ import { showToast } from "../Toast";
 interface Grupo {
   id: string;
   nome: string;
+  prestador?: boolean | number | string;
 }
 
 interface EditarGrupoModalProps {
@@ -25,14 +26,21 @@ export function EditarGrupoModal({
   grupo,
 }: EditarGrupoModalProps) {
   const [nome, setNome] = useState("");
+  const [prestador, setPrestador] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!grupo) {
       setNome("");
+      setPrestador(false);
       return;
     }
     setNome(grupo.nome || "");
+    setPrestador(
+      grupo.prestador === true ||
+        grupo.prestador === 1 ||
+        grupo.prestador === "1",
+    );
   }, [grupo]);
 
   const inputClass =
@@ -55,6 +63,7 @@ export function EditarGrupoModal({
       const payload = {
         id_grupo: grupo.id,
         nome,
+        prestador,
       };
 
       await apiFetch.put(`/api/grupos/${grupo.id}`, payload);
@@ -99,6 +108,16 @@ export function EditarGrupoModal({
             onChange={(e) => setNome(e.target.value)}
           />
         </div>
+
+        <label className="flex items-center gap-2 text-sm text-zinc-300">
+          <input
+            type="checkbox"
+            checked={prestador}
+            onChange={(e) => setPrestador(e.target.checked)}
+            className="h-4 w-4 rounded border-white/10 bg-white/[0.03] text-violet-600 focus:ring-violet-500"
+          />
+          Grupo prestador
+        </label>
 
         <div className="border-t border-white/5 pt-4">
           <div className="flex items-center justify-end gap-2">

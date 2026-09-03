@@ -32,7 +32,18 @@ $colaborador = new Colaborador();
 
 switch ($metodo) {
     case 'GET':
-        if ($subpath === 'listarPorEmpresa') {
+        if ($subpath === 'ListarPrestador') {
+            if ($loginValido) {
+                echo json_encode($colaborador->listarPrestador(
+                    $_GET['id_empresa'] ?? null,
+                    $_GET['id_filial'] ?? null
+                ));
+            } else {
+                http_response_code(401);
+                echo json_encode(["mensagem" => "Não autorizado"]);
+            }
+            break;
+        } elseif ($subpath === 'listarPorEmpresa') {
             if (!isset($_GET['empresa'])) {
                 http_response_code(400);
                 echo json_encode(["mensagem" => "Parâmetro empresa é obrigatório"]);

@@ -57,6 +57,21 @@ switch ($metodo) {
             break;
         }
 
+        if ($subpath === 'filial/config') {
+            if (!isset($_GET['id_servico'], $_GET['id_filial'])) {
+                http_response_code(400);
+                echo json_encode(["mensagem" => "Os parâmetros id_servico e id_filial são obrigatórios"]);
+                break;
+            }
+            if ($loginValido) {
+                echo json_encode($servico->obterConfiguracaoFilial($_GET['id_servico'], $_GET['id_filial']));
+            } else {
+                http_response_code(401);
+                echo json_encode(["mensagem" => "Não autorizado"]);
+            }
+            break;
+        }
+
         if ($_GET == null || $subpath === '') {
             if ($loginValido) {
                 echo json_encode($servico->listar());
@@ -79,6 +94,24 @@ switch ($metodo) {
                 echo json_encode($servico->adicionarFilial(
                     $data->id_servico ?? null,
                     $data->id_filial ?? null
+                ));
+            } else {
+                http_response_code(401);
+                echo json_encode(["mensagem" => "Não autorizado"]);
+            }
+            break;
+        }
+
+        if ($subpath === 'filial/config') {
+            if ($loginValido) {
+                echo json_encode($servico->salvarConfiguracaoFilial(
+                    $data->id_servico ?? null,
+                    $data->id_filial ?? null,
+                    $data->valor ?? null,
+                    $data->ativo ?? true,
+                    $data->duracao ?? null,
+                    $data->buffer_antes ?? 0,
+                    $data->buffer_depois ?? 0
                 ));
             } else {
                 http_response_code(401);

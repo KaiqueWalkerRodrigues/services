@@ -209,12 +209,13 @@ switch ($metodo) {
         }
 
         // Cadastro padrão de grupo:
-        // id_empresa, nome
+        // id_empresa, nome, prestador
 
         echo json_encode(
             $grupo->cadastrar(
                 $data->id_empresa ?? null,
-                $data->nome ?? null
+                $data->nome ?? null,
+                $data->prestador ?? false
             )
         );
 
@@ -228,7 +229,7 @@ switch ($metodo) {
     case 'PUT':
 
         // Edição de grupo:
-        // id_grupo, nome
+        // id_grupo, nome, prestador
 
         if (!$loginValido) {
 
@@ -259,7 +260,8 @@ switch ($metodo) {
         echo json_encode(
             $grupo->editar(
                 $data->id_grupo ?? null,
-                $data->nome ?? null
+                $data->nome ?? null,
+                $data->prestador ?? false
             )
         );
 

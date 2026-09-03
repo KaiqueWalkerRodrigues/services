@@ -586,6 +586,65 @@ class Colaborador
         }
     }
 
+    public function listarPrestador($id_empresa = null, $id_filial = null)
+    {
+        try {
+            $where = ['c.deleted_at IS NULL'];
+            $params = [];
+
+            if ($id_empresa !== null && $id_empresa !== '') {
+                $where[] = "EXISTS (
+                    SELECT 1 FROM colaboradores_empresas ce_filtro
+                    WHERE ce_filtro.id_colaborador = c.id_colaborador
+                      AND ce_filtro.id_empresa = :id_empresa
+                )";
+                $params[':id_empresa'] = [(int) $id_empresa, PDO::PARAM_INT];
+            }
+
+            if ($id_filial !== null && $id_filial !== '') {
+                $where[] = "EXISTS (
+                    SELECT 1 FROM colaboradores_filiais cf_filtro
+                    WHERE cf_filtro.id_colaborador = c.id_colaborador
+                      AND cf_filtro.id_filial = :id_filial
+                )";
+                $params[':id_filial'] = [(int) $id_filial, PDO::PARAM_INT];
+            }
+
+            $sql = "SELECT c.id_colaborador, c.nome, c.login, c.created_at, c.updated_at,
+                           CASE WHEN EXISTS (
+                               SELECT 1
+                               FROM colaboradores_grupos cg
+                               INNER JOIN grupos g ON g.id_grupo = cg.id_grupo
+                               WHERE cg.id_colaborador = c.id_colaborador
+                                 AND cg.deleted_at IS NULL
+                                 AND g.deleted_at IS NULL
+                                 AND g.prestador = 1
+                           ) THEN 1 ELSE 0 END AS prestador
+                    FROM colaboradores c
+                    WHERE " . implode(' AND ', $where) . "
+                    ORDER BY c.nome ASC";
+
+            $stmt = $this->pdo->prepare($sql);
+            foreach ($params as $name => [$value, $type]) {
+                $stmt->bindValue($name, $value, $type);
+            }
+            $stmt->execute();
+            $dados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'status' => 'sucesso',
+                'total' => count($dados),
+                'dados' => $dados
+            ];
+        } catch (PDOException $e) {
+            http_response_code(500);
+            return [
+                'status' => 'erro',
+                'mensagem' => 'Erro ao listar prestadores: ' . $e->getMessage()
+            ];
+        }
+    }
+
     public function adicionarFilial($id_colaborador, $id_filial)
     {
         try {

@@ -15,17 +15,18 @@ class Grupo
         }
     }
 
-    public function cadastrar($id_empresa, $nome)
+    public function cadastrar($id_empresa, $nome, $prestador = false)
     {
         try {
-            $sql = "INSERT INTO grupos 
-                    (id_empresa, nome, created_at, updated_at) 
-                    VALUES (:id_empresa, :nome, NOW(), NOW())";
+            $sql = "INSERT INTO grupos
+                    (id_empresa, nome, prestador, created_at, updated_at)
+                    VALUES (:id_empresa, :nome, :prestador, NOW(), NOW())";
 
             $stmt = $this->pdo->prepare($sql);
 
             $stmt->bindParam(':id_empresa', $id_empresa);
             $stmt->bindParam(':nome', $nome);
+            $stmt->bindValue(':prestador', $prestador ? 1 : 0, PDO::PARAM_INT);
 
             $stmt->execute();
 
@@ -44,11 +45,12 @@ class Grupo
         }
     }
 
-    public function editar($id_grupo, $nome)
+    public function editar($id_grupo, $nome, $prestador = false)
     {
         try {
             $sql = "UPDATE grupos 
-                    SET nome = :nome, 
+                    SET nome = :nome,
+                        prestador = :prestador,
                         updated_at = NOW() 
                     WHERE id_grupo = :id_grupo 
                     AND deleted_at IS NULL";
@@ -57,6 +59,7 @@ class Grupo
 
             $stmt->bindParam(':id_grupo', $id_grupo);
             $stmt->bindParam(':nome', $nome);
+            $stmt->bindValue(':prestador', $prestador ? 1 : 0, PDO::PARAM_INT);
 
             $stmt->execute();
 
